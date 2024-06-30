@@ -1,6 +1,8 @@
 name: CodeQL Analysis
 
 on:
+  
+  workdlow_dispatch:
   push:
     branches: [ main ]
   pull_request:
