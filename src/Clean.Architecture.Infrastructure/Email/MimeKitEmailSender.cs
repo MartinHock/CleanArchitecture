@@ -33,7 +33,7 @@ public class MimeKitEmailSender(
       new CancellationToken(canceled: true));
   }
   public override string ToString()
-  {T
+  {
     return this.GetType().Name;
   }
 }
