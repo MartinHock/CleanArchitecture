@@ -11,7 +11,7 @@ namespace Clean.Architecture.Web.Contributors;
 /// <remarks>
 /// Takes a positive integer ID and returns a matching Contributor record.
 /// </remarks>
-public class GetById(IMediator _mediator)
+public class GetById(IMediator mediator)
   : Endpoint<GetContributorByIdRequest, ContributorRecord>
 {
   public override void Configure()
@@ -25,7 +25,7 @@ public class GetById(IMediator _mediator)
   {
     var query = new GetContributorQuery(request.ContributorId);
 
-    var result = await _mediator.Send(query, cancellationToken);
+    var result = await mediator.Send(query, cancellationToken);
 
     if (result.Status == ResultStatus.NotFound)
     {

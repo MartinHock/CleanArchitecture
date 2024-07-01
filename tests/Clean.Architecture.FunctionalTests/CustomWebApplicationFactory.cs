@@ -1,9 +1,11 @@
 ﻿using Clean.Architecture.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Core;
 
 namespace Clean.Architecture.FunctionalTests;
 
@@ -50,9 +52,21 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         SeedData.PopulateTestDataAsync(db).Wait();
         //}
       }
-      catch (Exception ex)
+
+      catch (DbUpdateException ex)
       {
         logger.LogError(ex, "An error occurred seeding the " +
+                            "database with test messages. Error: {exceptionMessage}", ex.Message);
+      }
+      catch (InvalidOperationException ex)
+      {
+        logger.LogError(ex, "An error occurred seeding the " +
+                            "database with test messages. Error: {exceptionMessage}", ex.Message);
+      }
+
+      catch (Exception ex)
+      {
+        logger.LogError(ex, "An unexpected error occured " +
                             "database with test messages. Error: {exceptionMessage}", ex.Message);
       }
     }
