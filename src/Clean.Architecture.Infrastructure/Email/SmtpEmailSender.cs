@@ -18,7 +18,7 @@ public class SmtpEmailSender(
 
   public async Task SendEmailAsync(string to, string from, string subject, string body)
   {
-    var emailClient = new SmtpClient(_mailserverConfiguration.Hostname, _mailserverConfiguration.Port);
+   using var emailClient = new SmtpClient(_mailserverConfiguration.Hostname, _mailserverConfiguration.Port);
 
    using  var message = new MailMessage();
     message.From = new MailAddress(from);

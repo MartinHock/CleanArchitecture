@@ -21,7 +21,7 @@ public class MimeKitEmailSender(
     using var client = new SmtpClient(); 
     client.Connect(_mailserverConfiguration.Hostname, 
       _mailserverConfiguration.Port, false);
-    var message = new MimeMessage();
+    using var message = new MimeMessage();
     message.From.Add(new MailboxAddress(from, from));
     message.To.Add(new MailboxAddress(to, to));
     message.Subject = subject;
@@ -33,7 +33,7 @@ public class MimeKitEmailSender(
       new CancellationToken(canceled: true));
   }
   public override string ToString()
-  {
+  {T
     return this.GetType().Name;
   }
 }
