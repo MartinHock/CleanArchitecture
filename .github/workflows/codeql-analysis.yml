@@ -2,7 +2,7 @@ name: CodeQL Analysis
 
 on:
   
-  workdlow_dispatch:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
@@ -13,22 +13,28 @@ jobs:
   analyze:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
+    
     steps:
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+    
       - name: Checkout repository
         id: checkout_repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Initialize CodeQL
         id: init_codeql
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           queries: security-and-quality
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+        uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
         id: analyze_codeql
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
 
 # Built with ❤ by [Pipeline Foundation](https://pipeline.foundation)
