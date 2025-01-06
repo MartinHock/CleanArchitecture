@@ -1,0 +1,3 @@
+[submodule "CrossCuttingSettings"]
+	path = CrossCuttingSettings
+	url = https://martinhock.visualstudio.com/_git/CrossCuttingSettings
