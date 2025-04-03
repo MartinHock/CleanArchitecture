@@ -1,11 +1,10 @@
 ﻿using NimblePros.SampleToDo.Core.ProjectAggregate;
-using Xunit;
 
 namespace NimblePros.SampleToDo.UnitTests.Core.ProjectAggregate;
 
 public class Project_AddItem
 {
-  private Project _testProject = new Project("some name", PriorityStatus.Backlog);
+  private Project _testProject = new Project(ProjectName.From("some name"));
 
   [Fact]
   public void AddsItemToItems()

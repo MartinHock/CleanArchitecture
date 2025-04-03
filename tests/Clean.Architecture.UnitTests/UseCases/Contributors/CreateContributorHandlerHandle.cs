@@ -1,11 +1,4 @@
-﻿using Ardalis.SharedKernel;
-using Clean.Architecture.Core.ContributorAggregate;
-using Clean.Architecture.UseCases.Contributors.Create;
-using FluentAssertions;
-using NSubstitute;
-using Xunit;
-
-namespace Clean.Architecture.UnitTests.UseCases.Contributors;
+﻿namespace Clean.Architecture.UnitTests.UseCases.Contributors;
 
 public class CreateContributorHandlerHandle
 {
@@ -30,6 +23,6 @@ public class CreateContributorHandlerHandle
       .Returns(Task.FromResult(CreateContributor()));
     var result = await _handler.Handle(new CreateContributorCommand(_testName, null), CancellationToken.None);
 
-    result.IsSuccess.Should().BeTrue();
+    result.IsSuccess.ShouldBeTrue();
   }
 }

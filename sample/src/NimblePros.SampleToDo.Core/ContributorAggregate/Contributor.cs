@@ -1,19 +1,21 @@
-﻿using Ardalis.GuardClauses;
-using Ardalis.SharedKernel;
+﻿using NimblePros.SampleToDo.Core.ContributorAggregate.Events;
 
 namespace NimblePros.SampleToDo.Core.ContributorAggregate;
 
 public class Contributor : EntityBase, IAggregateRoot
 {
-  public string Name { get; private set; }
+  public ContributorName Name { get; private set; }
 
-  public Contributor(string name)
+  public Contributor(ContributorName name)
   {
-    Name = Guard.Against.NullOrEmpty(name, nameof(name));
+    Name = name;
   }
 
-  public void UpdateName(string newName)
+  public void UpdateName(ContributorName newName)
   {
-    Name = Guard.Against.NullOrEmpty(newName, nameof(newName));
+    if (Name.Equals(newName)) return;
+    Name = newName;
+    this.RegisterDomainEvent(new ContributorNameUpdatedEvent(this));
   }
 }
+

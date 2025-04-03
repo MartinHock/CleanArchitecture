@@ -1,10 +1,4 @@
-﻿using Ardalis.SharedKernel;
-using Clean.Architecture.Core.ContributorAggregate;
-using Clean.Architecture.Core.Services;
-using MediatR;
-using Microsoft.Extensions.Logging;
-using NSubstitute;
-using Xunit;
+﻿using Clean.Architecture.Core.Services;
 
 namespace Clean.Architecture.UnitTests.Core.Services;
 
@@ -26,6 +20,6 @@ public class DeleteContributorService_DeleteContributor
   {
     var result = await _service.DeleteContributor(0);
 
-    Assert.Equal(Ardalis.Result.ResultStatus.NotFound, result.Status);
+    result.Status.ShouldBe(Ardalis.Result.ResultStatus.NotFound);
   }
 }

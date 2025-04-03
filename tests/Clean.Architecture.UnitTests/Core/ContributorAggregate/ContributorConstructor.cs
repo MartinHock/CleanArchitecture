@@ -1,7 +1,4 @@
-﻿using Clean.Architecture.Core.ContributorAggregate;
-using Xunit;
-
-namespace Clean.Architecture.UnitTests.Core.ContributorAggregate;
+﻿namespace Clean.Architecture.UnitTests.Core.ContributorAggregate;
 
 public class ContributorConstructor
 {
@@ -18,6 +15,6 @@ public class ContributorConstructor
   {
     _testContributor = CreateContributor();
 
-    Assert.Equal(_testName, _testContributor.Name);
+    _testContributor.Name.ShouldBe(_testName);
   }
 }

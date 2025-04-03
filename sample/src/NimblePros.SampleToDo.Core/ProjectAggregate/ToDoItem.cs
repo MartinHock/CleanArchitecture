@@ -1,15 +1,25 @@
-﻿using Ardalis.GuardClauses;
-using NimblePros.SampleToDo.Core.ProjectAggregate.Events;
-using Ardalis.SharedKernel;
+﻿using NimblePros.SampleToDo.Core.ProjectAggregate.Events;
 
 namespace NimblePros.SampleToDo.Core.ProjectAggregate;
 
-public class ToDoItem : EntityBase
+public class ToDoItem : EntityBase<ToDoItem, ToDoItemId>
 {
+  public ToDoItem() : this(Priority.Backlog)
+  {
+  }
+
+  public ToDoItem(Priority priority)
+  {
+    Priority = priority;
+  }
+
   public string Title { get; set; } = string.Empty;
   public string Description { get; set; } = string.Empty;
   public int? ContributorId { get; private set; } // tasks don't have anyone assigned when first created
   public bool IsDone { get; private set; }
+
+  public Priority Priority { get; private set; }
+
 
   public void MarkComplete()
   {

@@ -1,8 +1,7 @@
-﻿using Ardalis.HttpClientTestExtensions;
-using NimblePros.SampleToDo.Web;
+﻿using NimblePros.SampleToDo.Web;
 using NimblePros.SampleToDo.Web.Endpoints.Projects;
 using NimblePros.SampleToDo.Web.Projects;
-using Xunit;
+using Shouldly;
 
 namespace NimblePros.SampleToDo.FunctionalTests.Projects;
 
@@ -21,9 +20,9 @@ public class ProjectGetById : IClassFixture<CustomWebApplicationFactory<Program>
   {
     var result = await _client.GetAndDeserializeAsync<GetProjectByIdResponse>(GetProjectByIdRequest.BuildRoute(1));
 
-    Assert.Equal(1, result.Id);
-    Assert.Equal(SeedData.TestProject1.Name, result.Name);
-    Assert.Equal(3, result.Items.Count);
+    result.Id.ShouldBe(1);
+    result.Name.ShouldBe(SeedData.TestProject1.Name.Value);
+    result.Items.Count.ShouldBe(3);
   }
 
   [Fact]

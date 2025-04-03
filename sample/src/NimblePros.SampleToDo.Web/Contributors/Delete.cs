@@ -1,7 +1,4 @@
-﻿using FastEndpoints;
-using Ardalis.Result;
-using MediatR;
-using NimblePros.SampleToDo.UseCases.Contributors.Delete;
+﻿using NimblePros.SampleToDo.UseCases.Contributors.Commands.Delete;
 
 namespace NimblePros.SampleToDo.Web.Contributors;
 

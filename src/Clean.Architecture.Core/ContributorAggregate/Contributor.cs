@@ -1,7 +1,4 @@
-﻿using Ardalis.GuardClauses;
-using Ardalis.SharedKernel;
-
-namespace Clean.Architecture.Core.ContributorAggregate;
+﻿namespace Clean.Architecture.Core.ContributorAggregate;
 
 public class Contributor(string name) : EntityBase, IAggregateRoot
 {
@@ -11,31 +8,19 @@ public class Contributor(string name) : EntityBase, IAggregateRoot
   public ContributorStatus Status { get; private set; } = ContributorStatus.NotSet;
   public PhoneNumber? PhoneNumber { get; private set; }
 
-  public void SetPhoneNumber(string phoneNumber)
-  {
-    PhoneNumber = new PhoneNumber(string.Empty, phoneNumber, string.Empty);
-  }
+  public void SetPhoneNumber(string phoneNumber) => PhoneNumber = new PhoneNumber(string.Empty, phoneNumber, string.Empty);
 
-  public void UpdateName(string newName)
-  {
-    Name = Guard.Against.NullOrEmpty(newName, nameof(newName));
-  }
+  public void UpdateName(string newName) => Name = Guard.Against.NullOrEmpty(newName, nameof(newName));
 }
 
-public class PhoneNumber : ValueObject
+public class PhoneNumber(string countryCode,
+  string number,
+  string? extension) : ValueObject
 {
-  public string CountryCode { get; private set; } = string.Empty;
-  public string Number { get; private set; } = string.Empty;
-  public string? Extension { get; private set; } = string.Empty;
+  public string CountryCode { get; private set; } = countryCode;
+  public string Number { get; private set; } = number;
+  public string? Extension { get; private set; } = extension;
 
-  public PhoneNumber(string countryCode,
-    string number,
-    string? extension)
-  {
-    CountryCode = countryCode;
-    Number = number;
-    Extension = extension;
-  }
   protected override IEnumerable<object> GetEqualityComponents()
   {
     yield return CountryCode;

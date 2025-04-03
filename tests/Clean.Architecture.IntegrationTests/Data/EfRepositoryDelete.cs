@@ -1,5 +1,4 @@
 ﻿using Clean.Architecture.Core.ContributorAggregate;
-using Xunit;
 
 namespace Clean.Architecture.IntegrationTests.Data;
 
@@ -18,7 +17,6 @@ public class EfRepositoryDelete : BaseEfRepoTestFixture
     await repository.DeleteAsync(Contributor);
 
     // verify it's no longer there
-    Assert.DoesNotContain(await repository.ListAsync(),
-        Contributor => Contributor.Name == initialName);
+    (await repository.ListAsync()).ShouldNotContain(Contributor => Contributor.Name == initialName);
   }
 }

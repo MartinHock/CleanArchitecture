@@ -1,9 +1,6 @@
-﻿using System.Net;
-using Ardalis.HttpClientTestExtensions;
-using Clean.Architecture.Infrastructure.Data;
+﻿using Clean.Architecture.Infrastructure.Data;
 using Clean.Architecture.Web.Contributors;
-using FluentAssertions;
-using Xunit;
+
 
 namespace Clean.Architecture.FunctionalTests.ApiEndpoints;
 
@@ -18,30 +15,15 @@ public class ContributorGetById(CustomWebApplicationFactory<Program> factory)
   {
     // Act
     var result = await _client.GetAndDeserializeAsync<ContributorRecord>(GetContributorByIdRequest.BuildRoute(1));
-    // Assert
-    Assert.Equal(1, result.Id);
-    Assert.Equal(SeedData.Contributor1.Name, result.Name);
+
+    result.Id.ShouldBe(1);
+    result.Name.ShouldBe(SeedData.Contributor1.Name);
   }
 
   [Fact]
   public async Task ReturnsNotFoundGivenId1000()
   {
-    // Arrange
-    var route = GetContributorByIdRequest.BuildRoute(1000);
-    // Act
-    var msg = await _client.GetAndEnsureNotFoundAsync(route);
-    // Assert
-    msg.StatusCode.Should().Be(HttpStatusCode.NotFound);
-  }
-
-  [Fact]
-  public async Task ReturnsNotFoundGivenId1()
-  {
-    // Arrange
-    var route = GetContributorByIdRequest.BuildRoute(1);
-    // Act
-    var msg = async () => await _client.GetAndEnsureNotFoundAsync(route);
-    // Assert
-    await msg.Should().ThrowAsync<HttpRequestException>().WithMessage("*Expected 404 NotFound*");
+    string route = GetContributorByIdRequest.BuildRoute(1000);
+    _ = await _client.GetAndEnsureNotFoundAsync(route);
   }
 }

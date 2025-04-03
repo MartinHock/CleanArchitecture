@@ -1,5 +1,4 @@
 ﻿using NimblePros.SampleToDo.Core.ProjectAggregate;
-using Xunit;
 
 namespace NimblePros.SampleToDo.IntegrationTests.Data;
 
@@ -8,10 +7,13 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
   [Fact]
   public async Task AddsProjectAndSetsId()
   {
-    var testProjectName = "testProject";
-    var testProjectStatus = PriorityStatus.Backlog;
+    var testProjectName = ProjectName.From("testProject");
     var repository = GetRepository();
-    var project = new Project(testProjectName, testProjectStatus);
+    var project = new Project(testProjectName);
+
+    var item = new ToDoItem();
+    item.Title = "test item title";
+    project.AddItem(item);
 
     await repository.AddAsync(project);
 
@@ -19,7 +21,6 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
                     .FirstOrDefault();
 
     Assert.Equal(testProjectName, newProject?.Name);
-    Assert.Equal(testProjectStatus, newProject?.Priority);
-    Assert.True(newProject?.Id > 0);
+    Assert.True(newProject?.Id.Value > 0);
   }
 }
