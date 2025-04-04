@@ -1,4 +1,5 @@
 ﻿using Clean.Architecture.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Clean.Architecture.FunctionalTests;
 
@@ -38,12 +39,9 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
 
       try
       {
-        // Can also skip creating the items
-        //if (!db.ToDoItems.Any())
-        //{
-        // Seed the database with test data.
+       
         SeedData.PopulateTestDataAsync(db).Wait();
-        //}
+       
       }
 
       catch (DbUpdateException ex)
@@ -75,23 +73,23 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
           // Configure test dependencies here
 
           //// Remove the app's ApplicationDbContext registration.
-          //var descriptor = services.SingleOrDefault(
-          //d => d.ServiceType ==
-          //    typeof(DbContextOptions<AppDbContext>));
+          var descriptor = services.SingleOrDefault(
+          d => d.ServiceType ==
+              typeof(DbContextOptions<AppDbContext>));
 
-          //if (descriptor != null)
-          //{
-          //  services.Remove(descriptor);
-          //}
+          if (descriptor != null)
+          {
+            services.Remove(descriptor);
+          }
 
           //// This should be set for each individual test run
-          //string inMemoryCollectionName = Guid.NewGuid().ToString();
+          string inMemoryCollectionName = Guid.NewGuid().ToString();
 
-          //// Add ApplicationDbContext using an in-memory database for testing.
-          //services.AddDbContext<AppDbContext>(options =>
-          //{
-          //  options.UseInMemoryDatabase(inMemoryCollectionName);
-          //});
+          // Add ApplicationDbContext using an in-memory database for testing.
+          services.AddDbContext<AppDbContext>(options =>
+          {
+            options.UseInMemoryDatabase(inMemoryCollectionName);
+          });
 
 
         });
