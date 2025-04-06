@@ -4,8 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Testcontainers.MsSql;
 
 namespace Clean.Architecture.FunctionalTests;
-
-public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram>, IAsyncLifetime where TProgram : class
+#pragma warning disable S125
+public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
 {
   private MsSqlContainer? _dbContainer;
 
@@ -134,3 +134,4 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         });
   }
 }
+#pragma warning restore S125
