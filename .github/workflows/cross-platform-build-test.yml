@@ -28,19 +28,8 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
-        dotnet-quality: 'ga'
+        
     
-    - name: Display .NET Info
-      run: dotnet --info
-    
-    - name: Setup CI NuGet Config (Windows)
-      if: runner.os == 'Windows'
-      run: Copy-Item ".github\NuGet.Config" "NuGet.Config" -Force
-
-    - name: Setup CI NuGet Config (Unix)
-      if: runner.os != 'Windows'
-      run: cp .github/NuGet.Config NuGet.Config
-
     - name: Restore dependencies
       run: dotnet restore Clean.Architecture.slnx --verbosity normal
       env:
