@@ -36,7 +36,7 @@ jobs:
           build-mode: manual
 
       - name: Restore
-        run: dotnet restore ./Clean.Architecture.slnx --configfile .github/workflows/nuget.ci.config
+        run: dotnet restore ./Clean.Architecture.slnx 
 
       - name: Build
         run: dotnet build ./Clean.Architecture.slnx --configuration Release --no-restore
