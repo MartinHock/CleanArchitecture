@@ -13,13 +13,16 @@ jobs:
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Step 2: Set up .NET environment
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
+
+      - name: Setup CI NuGet Config
+        run: cp .github/NuGet.Config NuGet.Config
 
       # Step 3: Prepare a directory in /dev/shm
       - name: Set up Ramdisk Directory

@@ -16,6 +16,14 @@ jobs:
         id: checkout_repo
         uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup CI NuGet Config
+        run: cp .github/NuGet.Config NuGet.Config
+
       - name: Initialize CodeQL
         id: init_codeql
         uses: github/codeql-action/init@v3

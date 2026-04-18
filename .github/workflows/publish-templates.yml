@@ -32,9 +32,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup CI NuGet Config
+        run: cp .github/NuGet.Config NuGet.Config
 
       - name: Build Full Template Solution
         run: dotnet build ./Clean.Architecture.slnx -c Release
