@@ -1,4 +1,5 @@
-using Clean.Architecture.Infrastructure.Data;
+﻿using Clean.Architecture.Infrastructure.Data;
+using DotNet.Testcontainers.Builders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.MsSql;
@@ -15,10 +16,11 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     {
       _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest")
         .WithPassword("Your_password123!")
+        .WithEnvironment("MSSQL_PID", "Evaluation")
         .Build();
       await _dbContainer.StartAsync();
     }
-    catch (ArgumentException)
+    catch (DockerUnavailableException)
     {
       // Docker is not available; fall back to SQLite (configured via appsettings.Testing.json)
       _dbContainer = null;
