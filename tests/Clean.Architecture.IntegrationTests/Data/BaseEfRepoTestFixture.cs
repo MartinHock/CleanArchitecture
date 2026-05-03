@@ -1,43 +1,52 @@
 ﻿using Clean.Architecture.Core.ContributorAggregate;
 using Clean.Architecture.Infrastructure.Data;
+using Microsoft.Data.Sqlite;
 
 namespace Clean.Architecture.IntegrationTests.Data;
 
-public abstract class BaseEfRepoTestFixture
+public abstract class BaseEfRepoTestFixture : IDisposable
 {
+  private readonly SqliteConnection _connection;
+
   protected AppDbContext _dbContext;
 
   protected BaseEfRepoTestFixture()
   {
-    var options = CreateNewContextOptions();
-    _dbContext = new AppDbContext(options);
-  }
-
-  protected static DbContextOptions<AppDbContext> CreateNewContextOptions()
-  {
     var fakeEventDispatcher = Substitute.For<IDomainEventDispatcher>();
-    // Create a fresh service provider, and therefore a fresh
-    // InMemory database instance.
-    var serviceProvider = new ServiceCollection()
-        .AddEntityFrameworkInMemoryDatabase()
-        .AddScoped<IDomainEventDispatcher>(_ => fakeEventDispatcher)
-        .AddScoped<EventDispatchInterceptor>()
-        .BuildServiceProvider();
 
-    // Create a new options instance telling the context to use an
-    // InMemory database and the new service provider.
+    var serviceProvider = new ServiceCollection()
+      .AddEntityFrameworkSqlite()
+      .AddScoped<IDomainEventDispatcher>(_ => fakeEventDispatcher)
+      .AddScoped<EventDispatchInterceptor>()
+      .BuildServiceProvider();
+
+    _connection = new SqliteConnection("Filename=:memory:");
+    _connection.Open();
+
     var interceptor = serviceProvider.GetRequiredService<EventDispatchInterceptor>();
 
-    var builder = new DbContextOptionsBuilder<AppDbContext>();
-    builder.UseInMemoryDatabase("cleanarchitecture")
-           .UseInternalServiceProvider(serviceProvider)
-           .AddInterceptors(interceptor);
+    var options = new DbContextOptionsBuilder<AppDbContext>()
+      .UseSqlite(_connection)
+      .UseInternalServiceProvider(serviceProvider)
+      .AddInterceptors(interceptor)
+      .Options;
 
-    return builder.Options;
+    _dbContext = new AppDbContext(options);
+
+    _dbContext.Database.EnsureDeleted();
+    _dbContext.Database.EnsureCreated();
   }
 
   protected EfRepository<Contributor> GetRepository()
   {
     return new EfRepository<Contributor>(_dbContext);
+  }
+
+  public void Dispose()
+  {
+    _dbContext.Dispose();
+    _connection.Dispose();
+
+    GC.SuppressFinalize(this);
   }
 }
