@@ -10,12 +10,23 @@ public class ContributorGetById(CustomWebApplicationFactory<Program> factory) : 
   private readonly HttpClient _client = factory.CreateClient();
 
   [Fact]
-  public async Task ReturnsSeedContributorGivenId1()
+  public async Task ReturnsSeedContributorGivenId()
   {
-    var result = await _client.GetAndDeserializeAsync<ContributorRecord>(GetContributorByIdRequest.BuildRoute(1));
+    using var scope = factory.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    result.Id.ShouldBe(1);
-    result.Name.ShouldBe(SeedData.Contributor1.Name.Value);
+    var contributors = dbContext.Contributors
+      .AsEnumerable()
+      .ToList();
+
+    var seedContributor = contributors
+      .Single(c => c.Name.Value == SeedData.Contributor1Name);
+
+    var result = await _client.GetAndDeserializeAsync<ContributorRecord>(
+      GetContributorByIdRequest.BuildRoute(seedContributor.Id.Value));
+
+    result.Id.ShouldBe(seedContributor.Id.Value);
+    result.Name.ShouldBe(SeedData.Contributor1Name);
   }
 
   [Fact]

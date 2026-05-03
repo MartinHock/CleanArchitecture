@@ -1,30 +1,38 @@
 ﻿using Clean.Architecture.Core.ContributorAggregate;
-
-namespace Clean.Architecture.Infrastructure.Data;
+using Clean.Architecture.Infrastructure.Data;
 
 public static class SeedData
 {
-  public const int NUMBER_OF_CONTRIBUTORS = 27; // including the 2 below
-  public static readonly Contributor Contributor1 = new(ContributorName.From("Ardalis"));
-  public static readonly Contributor Contributor2 = new(ContributorName.From("Ilyana"));
+  public const int NUMBER_OF_CONTRIBUTORS = 27;
+
+  public const string Contributor1Name = "Ardalis";
+  public const string Contributor2Name = "Ilyana";
 
   public static async Task InitializeAsync(AppDbContext dbContext)
   {
-    if (await dbContext.Contributors.AnyAsync()) return; // DB has been seeded
+    if (await dbContext.Contributors.AnyAsync()) return;
 
     await PopulateTestDataAsync(dbContext);
   }
 
   public static async Task PopulateTestDataAsync(AppDbContext dbContext)
   {
-    dbContext.Contributors.AddRange([Contributor1, Contributor2]);
+    var contributor1 = CreateContributor(Contributor1Name);
+    var contributor2 = CreateContributor(Contributor2Name);
+
+    dbContext.Contributors.AddRange(contributor1, contributor2);
     await dbContext.SaveChangesAsync();
 
-    // add a bunch more contributors to support demonstrating paging
-    for (int i = 1; i <= NUMBER_OF_CONTRIBUTORS-2; i++)
+    for (int i = 1; i <= NUMBER_OF_CONTRIBUTORS - 2; i++)
     {
-      dbContext.Contributors.Add(new Contributor(ContributorName.From($"Contributor {i}")));
+      dbContext.Contributors.Add(CreateContributor($"Contributor {i}"));
     }
+
     await dbContext.SaveChangesAsync();
+  }
+
+  private static Contributor CreateContributor(string name)
+  {
+    return new Contributor(ContributorName.From(name));
   }
 }

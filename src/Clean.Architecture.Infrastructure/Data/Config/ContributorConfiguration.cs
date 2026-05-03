@@ -9,6 +9,7 @@ public class ContributorConfiguration : IEntityTypeConfiguration<Contributor>
     builder.Property(entity => entity.Id)
       .ValueGeneratedOnAdd()
       .HasVogenConversion()
+      .HasValueGenerator<ContributorIdValueGenerator>()
       .IsRequired();
 
     builder.Property(entity => entity.Name)
@@ -16,11 +17,11 @@ public class ContributorConfiguration : IEntityTypeConfiguration<Contributor>
       .HasMaxLength(ContributorName.MaxLength)
       .IsRequired();
 
-    builder.OwnsOne(builder => builder.PhoneNumber);
+    builder.OwnsOne(entity => entity.PhoneNumber);
 
-    builder.Property(x => x.Status)
+    builder.Property(entity => entity.Status)
       .HasConversion(
-          x => x.Value,
-          x => ContributorStatus.FromValue(x));
+        status => status.Value,
+        value => ContributorStatus.FromValue(value));
   }
 }

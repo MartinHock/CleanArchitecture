@@ -4,17 +4,33 @@ using Clean.Architecture.Web.Contributors;
 namespace Clean.Architecture.FunctionalTests.ApiEndpoints;
 
 [Collection("Sequential")]
-public class ContributorList(CustomWebApplicationFactory<Program> factory) : IClassFixture<CustomWebApplicationFactory<Program>>
+public class ContributorList(CustomWebApplicationFactory<Program> factory)
+  : IClassFixture<CustomWebApplicationFactory<Program>>
 {
   private readonly HttpClient _client = factory.CreateClient();
 
   [Fact]
-  public async Task ReturnsTwoContributors()
+  public async Task ReturnsSeedContributors()
   {
-    var result = await _client.GetAndDeserializeAsync<ContributorListResponse>("/Contributors");
+    using var scope = factory.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    Assert.Equal(SeedData.NUMBER_OF_CONTRIBUTORS, result.TotalCount);
-    Assert.Contains(result.Items, i => i.Name == SeedData.Contributor1.Name);
-    Assert.Contains(result.Items, i => i.Name == SeedData.Contributor2.Name);
+    var seededContributors = dbContext.Contributors
+      .AsEnumerable()
+      .Select(c => c.Name.Value)
+      .ToList();
+
+    seededContributors.ShouldNotBeEmpty();
+
+    var result = await _client.GetAndDeserializeAsync<ContributorListResponse>(
+      "/Contributors");
+
+    result.Items.ShouldNotBeNull();
+    result.Items.ShouldNotBeEmpty();
+
+    result.Items.ShouldContain(c => c.Name == SeedData.Contributor1Name);
+    result.Items.ShouldContain(c => c.Name == SeedData.Contributor2Name);
+
+    result.TotalCount.ShouldBe(SeedData.NUMBER_OF_CONTRIBUTORS);
   }
 }
