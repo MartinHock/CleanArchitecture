@@ -7,19 +7,46 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
   [Fact]
   public async Task AddsContributorAndSetsId()
   {
-    var testContributorName = "testContributor";
-    var testContributorStatus = ContributorStatus.NotSet;
     var repository = GetRepository();
-    var Contributor = new Contributor(testContributorName);
 
-    await repository.AddAsync(Contributor);
+    var testContributorName = ContributorName.From($"testContributor-{Guid.NewGuid()}");
+    var expectedStatus = ContributorStatus.NotSet;
 
-    var newContributor = (await repository.ListAsync())
-                    .FirstOrDefault();
+    var contributor = new Contributor(testContributorName);
+
+    await repository.AddAsync(contributor);
+
+    var contributors = await repository.ListAsync();
+
+    var newContributor = contributors
+      .Single(c => c.Name == testContributorName);
 
     newContributor.ShouldNotBeNull();
-    testContributorName.ShouldBe(newContributor.Name);
-    testContributorStatus.ShouldBe(newContributor.Status);
-    newContributor.Id.ShouldBeGreaterThan(0);
+    newContributor.Name.ShouldBe(testContributorName);
+    newContributor.Status.ShouldBe(expectedStatus);
+    newContributor.Id.Value.ShouldBeGreaterThan(0);
+  }
+
+  [Fact]
+  public async Task AddsTwoContributorsWithDistinctDbGeneratedIds()
+  {
+    var repository = GetRepository();
+
+    var firstName = ContributorName.From($"first-{Guid.NewGuid()}");
+    var secondName = ContributorName.From($"second-{Guid.NewGuid()}");
+
+    var first = new Contributor(firstName);
+    var second = new Contributor(secondName);
+
+    await repository.AddRangeAsync([first, second]);
+
+    var contributors = await repository.ListAsync();
+
+    var addedFirst = contributors.Single(c => c.Name == firstName);
+    var addedSecond = contributors.Single(c => c.Name == secondName);
+
+    addedFirst.Id.Value.ShouldBeGreaterThan(0);
+    addedSecond.Id.Value.ShouldBeGreaterThan(0);
+    addedFirst.Id.ShouldNotBe(addedSecond.Id);
   }
 }

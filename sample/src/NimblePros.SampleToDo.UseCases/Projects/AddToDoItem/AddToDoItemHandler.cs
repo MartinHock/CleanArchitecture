@@ -12,7 +12,7 @@ public class AddToDoItemHandler : ICommandHandler<AddToDoItemCommand, Result<ToD
     _repository = repository;
   }
 
-  public async Task<Result<ToDoItemId>> Handle(AddToDoItemCommand request,
+  public async ValueTask<Result<ToDoItemId>> Handle(AddToDoItemCommand request,
     CancellationToken cancellationToken)
   {
     var spec = new ProjectByIdWithItemsSpec(request.ProjectId);
@@ -22,13 +22,9 @@ public class AddToDoItemHandler : ICommandHandler<AddToDoItemCommand, Result<ToD
       return Result.NotFound();
     }
 
-    var newItem = new ToDoItem()
-    {
-      Title = request.Title!,
-      Description = request.Description!
-    };
+    var newItem = new ToDoItem(title: request.Title!, description: request.Description!);
 
-    if(request.ContributorId.HasValue)
+    if (request.ContributorId.HasValue)
     {
       newItem.AddContributor(request.ContributorId.Value);
     }

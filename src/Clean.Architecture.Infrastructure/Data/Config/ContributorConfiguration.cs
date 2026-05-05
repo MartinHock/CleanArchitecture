@@ -6,15 +6,22 @@ public class ContributorConfiguration : IEntityTypeConfiguration<Contributor>
 {
   public void Configure(EntityTypeBuilder<Contributor> builder)
   {
-    builder.Property(p => p.Name)
-        .HasMaxLength(DataSchemaConstants.DEFAULT_NAME_LENGTH)
-        .IsRequired();
+    builder.Property(entity => entity.Id)
+      .ValueGeneratedOnAdd()
+      .HasVogenConversion()
+      .HasValueGenerator<ContributorIdValueGenerator>()
+      .IsRequired();
 
-    builder.OwnsOne(builder => builder.PhoneNumber);
+    builder.Property(entity => entity.Name)
+      .HasVogenConversion()
+      .HasMaxLength(ContributorName.MaxLength)
+      .IsRequired();
 
-    builder.Property(x => x.Status)
+    builder.OwnsOne(entity => entity.PhoneNumber);
+
+    builder.Property(entity => entity.Status)
       .HasConversion(
-          x => x.Value,
-          x => ContributorStatus.FromValue(x));
+        status => status.Value,
+        value => ContributorStatus.FromValue(value));
   }
 }

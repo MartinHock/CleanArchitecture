@@ -1,3 +1,13 @@
-﻿namespace NimblePros.SampleToDo.UseCases.Contributors.Queries.Get;
+﻿using NimblePros.SampleToDo.Core.ContributorAggregate;
 
-public record GetContributorQuery(int ContributorId) : IQuery<Result<ContributorDTO>>;
+namespace NimblePros.SampleToDo.UseCases.Contributors.Queries.Get;
+
+public record GetContributorQuery(ContributorId ContributorId) : IQuery<Result<ContributorDto>>, ICacheable
+{
+  public string? CacheProfile => null;
+
+  public string GetCacheKey()
+  {
+    return $"{nameof(GetContributorQuery)}-{ContributorId.Value}";
+  }
+}

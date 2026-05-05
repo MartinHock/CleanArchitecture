@@ -1,4 +1,5 @@
-﻿using NimblePros.SampleToDo.Core.ProjectAggregate.Events;
+﻿using NimblePros.SampleToDo.Core.ContributorAggregate.Events;
+using NimblePros.SampleToDo.Core.ProjectAggregate.Events;
 
 namespace NimblePros.SampleToDo.Core.ProjectAggregate;
 
@@ -6,7 +7,7 @@ public class Project : EntityBase<Project, ProjectId>, IAggregateRoot
 {
   public ProjectName Name { get; private set; }
 
-  private readonly List<ToDoItem> _items = new();
+  private readonly List<ToDoItem> _items = [];
   public IEnumerable<ToDoItem> Items => _items.AsReadOnly();
   public ProjectStatus Status => _items.All(i => i.IsDone) ? ProjectStatus.Complete : ProjectStatus.InProgress;
 
@@ -15,17 +16,20 @@ public class Project : EntityBase<Project, ProjectId>, IAggregateRoot
     Name = name;
   }
 
-  public void AddItem(ToDoItem newItem)
+  public Project AddItem(ToDoItem newItem)
   {
     Guard.Against.Null(newItem);
     _items.Add(newItem);
 
     var newItemAddedEvent = new NewItemAddedEvent(this, newItem);
     base.RegisterDomainEvent(newItemAddedEvent);
+    return this;
   }
 
-  public void UpdateName(ProjectName newName)
+  public Project UpdateName(ProjectName newName)
   {
+    if (Name.Equals(newName)) return this;
     Name = newName;
+    return this;
   }
 }

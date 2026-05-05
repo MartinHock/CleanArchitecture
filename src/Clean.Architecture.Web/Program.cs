@@ -2,34 +2,34 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
-var logger = Log.Logger = new LoggerConfiguration()
-  .Enrich.FromLogContext()
-  .WriteTo.Console()
-  .CreateLogger();
+builder.AddServiceDefaults()    // This sets up OpenTelemetry logging
+       .AddLoggerConfigs();     // This adds Serilog for console formatting
 
-logger.Information("Starting web host");
+using var loggerFactory = LoggerFactory.Create(config => config.AddConsole());
+var startupLogger = loggerFactory.CreateLogger<Program>();
 
-builder.AddLoggerConfigs();
+startupLogger.LogInformation("Starting web host");
 
-var appLogger = new SerilogLoggerFactory(logger)
-    .CreateLogger<Program>();
-
-builder.Services.AddOptionConfigs(builder.Configuration, appLogger, builder);
-builder.Services.AddServiceConfigs(appLogger, builder);
+builder.Services.AddOptionConfigs(builder.Configuration, startupLogger, builder);
+builder.Services.AddServiceConfigs(startupLogger, builder);
 
 builder.Services.AddFastEndpoints()
                 .SwaggerDocument(o =>
                 {
+                  o.DocumentSettings = s =>
+                  {
+                    s.Title = "Clean Architecture API";
+                    s.Version = "v1";
+                    s.Description = "HTTP endpoints for the Clean Architecture sample application.";
+                  };
                   o.ShortSchemaNames = true;
                 });
-
-#if (aspire)
-builder.AddServiceDefaults();
-#endif
 
 var app = builder.Build();
 
 await app.UseAppMiddlewareAndSeedDatabase();
+
+app.MapDefaultEndpoints(); // Aspire health checks and metrics
 
 app.Run();
 
