@@ -6,7 +6,7 @@ using Testcontainers.MsSql;
 
 namespace Clean.Architecture.FunctionalTests;
 #pragma warning disable S125
-public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
+public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram>, IAsyncLifetime where TProgram : class
 {
   private MsSqlContainer? _dbContainer;
 
@@ -19,7 +19,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         .WithEnvironment("MSSQL_PID", "Evaluation")
         .Build();
 
-      await _dbContainer.StartAsync();
+      await _dbContainer.StartAsync().ConfigureAwait(false);
     }
     catch (DockerUnavailableException)
     {
