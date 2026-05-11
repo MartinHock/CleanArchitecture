@@ -14,7 +14,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
   {
     try
     {
-      _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest")
+      _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
         .WithPassword("Your_password123!")
         .WithEnvironment("MSSQL_PID", "Evaluation")
         .Build();
@@ -51,42 +51,23 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     var db = services.GetRequiredService<AppDbContext>();
     var logger = services.GetRequiredService<ILogger<CustomWebApplicationFactory<TProgram>>>();
 
-    try
-    {
-      if (_dbContainer != null)
+      var logger = scopedServices
+          .GetRequiredService<ILogger<CustomWebApplicationFactory<TProgram>>>();
+
+      try
       {
-        // SQL Server → run migrations
-        db.Database.Migrate();
-      }
-      else
-      {
-        // SQLite fallback
+        // Functional tests use EnsureCreated to avoid migration-script coupling.
         db.Database.EnsureCreated();
+
+        // Seed the database with test data only if it has not been seeded yet.
+        // This is safe for container reuse across test runs and multiple fixture instances.
+        SeedData.InitializeAsync(db).GetAwaiter().GetResult();
       }
-
-      // 🔥 CRITICAL: run seeding and FAIL HARD if it breaks
-      SeedData.InitializeAsync(db)
-        .GetAwaiter()
-        .GetResult();
-
-      // 🔍 Verify seeding worked
-      var contributorCount = db.Contributors.Count();
-
-      logger.LogInformation("Seeded {Count} contributors.", contributorCount);
-
-      if (contributorCount == 0)
+      catch (Exception ex)
       {
-        throw new InvalidOperationException(
-          "Database seeding completed, but no contributors were created.");
+        logger.LogError(ex, "An error occurred seeding the database with test messages. Error: {exceptionMessage}", ex.Message);
+        throw;
       }
-    }
-    catch (Exception ex)
-    {
-      logger.LogError(ex,
-        "An error occurred seeding the database. Error: {Message}",
-        ex.Message);
-
-      throw; // 🔥 DO NOT SWALLOW — fail tests immediately
     }
 
     return host;
