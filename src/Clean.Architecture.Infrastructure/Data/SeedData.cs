@@ -7,9 +7,6 @@ public static class SeedData
   public static readonly ContributorName Contributor1Name = ContributorName.From("Ardalis");
   public static readonly ContributorName Contributor2Name = ContributorName.From("Ilyana");
 
-  public const string Contributor1Name = "Ardalis";
-  public const string Contributor2Name = "Ilyana";
-
   public static async Task InitializeAsync(AppDbContext dbContext)
   {
     if (await dbContext.Contributors.AnyAsync()) return;
