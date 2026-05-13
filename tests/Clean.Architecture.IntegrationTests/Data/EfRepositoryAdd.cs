@@ -12,9 +12,9 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
     var repository = GetRepository();
     var Contributor = new Contributor(testContributorName);
 
-    await repository.AddAsync(Contributor);
+    await repository.AddAsync(Contributor, TestContext.Current.CancellationToken);
 
-    var newContributor = (await repository.ListAsync())
+    var newContributor = (await repository.ListAsync(TestContext.Current.CancellationToken))
                     .FirstOrDefault();
 
     newContributor.ShouldNotBeNull();
@@ -30,10 +30,10 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
     var first = new Contributor(ContributorName.From("first"));
     var second = new Contributor(ContributorName.From("second"));
 
-    await repository.AddAsync(first);
-    await repository.AddAsync(second);
+    await repository.AddAsync(first, TestContext.Current.CancellationToken);
+    await repository.AddAsync(second, TestContext.Current.CancellationToken);
 
-    var all = await repository.ListAsync();
+    var all = await repository.ListAsync(TestContext.Current.CancellationToken);
     all.Count.ShouldBe(2);
     all[0].Id.Value.ShouldBeGreaterThan(0);
     all[1].Id.Value.ShouldBeGreaterThan(0);

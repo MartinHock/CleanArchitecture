@@ -12,7 +12,7 @@ public class DockerAvailabilityTests
       // Ping the Docker daemon directly using the Docker client.
       // This has no side effects on container lifecycle or Testcontainers internals.
       using var client = new DockerClientConfiguration().CreateClient();
-      await client.System.PingAsync();
+      await client.System.PingAsync(TestContext.Current.CancellationToken);
     }
     catch (Exception)
     {
