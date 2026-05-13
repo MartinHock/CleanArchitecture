@@ -1,7 +1,22 @@
-# GitHub Copilot Instructions for Clean Architecture Template
+# Mandatory First Step
 
+Before making any change, GitHub Copilot must first read this entire instructions file and follow it as binding project guidance.
+
+Copilot must not start editing, refactoring, upgrading packages, changing tests, or modifying build/pipeline configuration before considering these instructions.
+
+For every requested task, Copilot must:
+
+1. Identify the exact scope of the user request.
+2. Check whether the requested change is covered by these instructions.
+3. Keep the change as small as possible.
+4. Avoid unrelated modernization or cleanup.
+5. Run the required verification commands before claiming completion.
+6. Report exactly which files were changed and why.
+
+If the requested task conflicts with these instructions, Copilot must stop and ask for confirmation before proceeding.
+# GitHub Copilot Instructions for Clean Architecture Template
 ## Project Overview
-This is a **Clean Architecture template** for .NET 9 that demonstrates Domain-Driven Design (DDD) patterns. It's a starter template, not a reference application - delete sample code once you understand the patterns.
+This is a **Clean Architecture template** for .NET 10 that demonstrates Domain-Driven Design (DDD) patterns. It's a starter template, not a reference application - delete sample code once you understand the patterns.
 
 ## Architecture & Project Structure
 
@@ -122,3 +137,54 @@ Contributors/
 
 ## VS Code Tasks
 Use the predefined tasks: `build`, `publish`, `watch` instead of manual `dotnet` commands when possible.
+
+## Mandatory Pre-Task Checklist
+
+Before starting any task, Copilot must explicitly check:
+
+- What branch is currently active?
+- What files are expected to change?
+- Which files must not be changed?
+- Are package versions centrally managed in `Directory.Packages.props`?
+- Are tests expected to run before completion?
+
+Copilot must not perform broad automatic modernization unless explicitly requested.
+
+## Strict Migration Rules for Dependency/Test Updates
+
+When working on dependency updates, test framework migrations, or build/test modernization, follow these strict rules:
+...
+
+## Strict Migration Rules for Dependency/Test Updates
+
+When working on dependency updates, test framework migrations, or build/test modernization, follow these strict rules:
+
+### Scope Control
+- Do not perform broad refactorings unless explicitly requested.
+- Do not change application architecture, project structure, namespaces, or production code unless required to fix compilation after the requested change.
+- Do not update unrelated NuGet packages.
+- Do not modify CI/CD pipeline files unless explicitly requested.
+- Do not change Docker, Testcontainers, database provider configuration, Aspire configuration, or functional test infrastructure unless explicitly requested.
+
+### xUnit v3 Migration Rules
+When asked to migrate from `xunit` to `xunit.v3`:
+- Only replace the deprecated `xunit` package with `xunit.v3`.
+- Keep `Microsoft.NET.Test.Sdk` unless there is a proven build/test failure requiring a change.
+- Keep `xunit.runner.visualstudio` unless there is a proven build/test failure requiring a change.
+- Do not introduce `Microsoft.Testing.Platform.MSBuild` unless explicitly requested.
+- Do not introduce `coverlet.MTP` unless explicitly requested.
+- Do not change code coverage configuration unless explicitly requested.
+- Do not change test logic unless required by xUnit v3 API compatibility.
+
+### Central Package Management
+- Package versions must remain in `Directory.Packages.props`.
+- Test projects must use `<PackageReference Include="..." />` without `Version`.
+- Do not add package versions directly to `.csproj` files.
+
+### Verification Required Before Claiming Completion
+Before saying that the task is complete, run and verify:
+
+```bash
+dotnet restore
+dotnet build Clean.Architecture.slnx
+dotnet test Clean.Architecture.slnx
