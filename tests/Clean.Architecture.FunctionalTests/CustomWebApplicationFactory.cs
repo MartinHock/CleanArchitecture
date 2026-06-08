@@ -9,11 +9,11 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
 {
   private MsSqlContainer? _dbContainer;
 
-  public async Task InitializeAsync()
+  public async ValueTask InitializeAsync()
   {
     try
     {
-      _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
+      _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest")
         .WithPassword("Your_password123!")
         .Build();
       await _dbContainer.StartAsync();
@@ -25,7 +25,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     }
   }
 
-  public new async Task DisposeAsync()
+  public new async ValueTask DisposeAsync()
   {
     // Clean up environment variable
     Environment.SetEnvironmentVariable("USE_SQL_SERVER", null);

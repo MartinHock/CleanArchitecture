@@ -7,46 +7,38 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
   [Fact]
   public async Task AddsContributorAndSetsId()
   {
+    var cancellationToken = TestContext.Current.CancellationToken;
+    var testContributorName = ContributorName.From("testContributor");
+    var testContributorStatus = ContributorStatus.NotSet;
     var repository = GetRepository();
+    var Contributor = new Contributor(testContributorName);
 
-    var testContributorName = ContributorName.From($"testContributor-{Guid.NewGuid()}");
-    var expectedStatus = ContributorStatus.NotSet;
+    await repository.AddAsync(Contributor, cancellationToken);
 
-    var contributor = new Contributor(testContributorName);
-
-    await repository.AddAsync(contributor);
-
-    var contributors = await repository.ListAsync();
-
-    var newContributor = contributors
-      .Single(c => c.Name == testContributorName);
+    var newContributor = (await repository.ListAsync(cancellationToken))
+                    .FirstOrDefault();
 
     newContributor.ShouldNotBeNull();
-    newContributor.Name.ShouldBe(testContributorName);
-    newContributor.Status.ShouldBe(expectedStatus);
+    testContributorName.ShouldBe(newContributor.Name);
+    testContributorStatus.ShouldBe(newContributor.Status);
     newContributor.Id.Value.ShouldBeGreaterThan(0);
   }
 
   [Fact]
   public async Task AddsTwoContributorsWithDistinctDbGeneratedIds()
   {
+    var cancellationToken = TestContext.Current.CancellationToken;
     var repository = GetRepository();
+    var first = new Contributor(ContributorName.From("first"));
+    var second = new Contributor(ContributorName.From("second"));
 
-    var firstName = ContributorName.From($"first-{Guid.NewGuid()}");
-    var secondName = ContributorName.From($"second-{Guid.NewGuid()}");
+    await repository.AddAsync(first, cancellationToken);
+    await repository.AddAsync(second, cancellationToken);
 
-    var first = new Contributor(firstName);
-    var second = new Contributor(secondName);
-
-    await repository.AddRangeAsync([first, second]);
-
-    var contributors = await repository.ListAsync();
-
-    var addedFirst = contributors.Single(c => c.Name == firstName);
-    var addedSecond = contributors.Single(c => c.Name == secondName);
-
-    addedFirst.Id.Value.ShouldBeGreaterThan(0);
-    addedSecond.Id.Value.ShouldBeGreaterThan(0);
-    addedFirst.Id.ShouldNotBe(addedSecond.Id);
+    var all = await repository.ListAsync(cancellationToken);
+    all.Count.ShouldBe(2);
+    all[0].Id.Value.ShouldBeGreaterThan(0);
+    all[1].Id.Value.ShouldBeGreaterThan(0);
+    all[0].Id.ShouldNotBe(all[1].Id);
   }
 }
