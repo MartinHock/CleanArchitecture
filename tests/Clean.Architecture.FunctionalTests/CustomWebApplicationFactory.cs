@@ -12,13 +12,11 @@ public class CustomWebApplicationFactory<TProgram>
 {
   private MsSqlContainer? _dbContainer;
 
-  public async Task InitializeAsync()
+  public async ValueTask InitializeAsync()
   {
     try
     {
-      _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+      _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest")
         .WithPassword("Your_password123!")
         .WithEnvironment("MSSQL_PID", "Evaluation")
         .Build();
@@ -32,7 +30,7 @@ public class CustomWebApplicationFactory<TProgram>
     }
   }
 
-  public new async Task DisposeAsync()
+  public new async ValueTask DisposeAsync()
   {
     Environment.SetEnvironmentVariable("USE_SQL_SERVER", null);
 

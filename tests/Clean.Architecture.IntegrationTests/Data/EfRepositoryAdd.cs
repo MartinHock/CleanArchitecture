@@ -7,12 +7,15 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
   [Fact]
   public async Task AddsContributorAndSetsId()
   {
+    var cancellationToken = TestContext.Current.CancellationToken;
+    var testContributorName = ContributorName.From("testContributor");
+    var testContributorStatus = ContributorStatus.NotSet;
     var repository = GetRepository();
 
-    var testContributorName = ContributorName.From($"testContributor-{Guid.NewGuid()}");
-    var expectedStatus = ContributorStatus.NotSet;
+    await repository.AddAsync(Contributor, cancellationToken);
 
-    var contributor = new Contributor(testContributorName);
+    var newContributor = (await repository.ListAsync(cancellationToken))
+                    .FirstOrDefault();
 
     await repository.AddAsync(contributor);
 
@@ -30,6 +33,7 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
   [Fact]
   public async Task AddsTwoContributorsWithDistinctDbGeneratedIds()
   {
+    var cancellationToken = TestContext.Current.CancellationToken;
     var repository = GetRepository();
 
     var firstName = ContributorName.From($"first-{Guid.NewGuid()}");
@@ -42,11 +46,13 @@ public class EfRepositoryAdd : BaseEfRepoTestFixture
 
     var contributors = await repository.ListAsync();
 
-    var addedFirst = contributors.Single(c => c.Name == firstName);
-    var addedSecond = contributors.Single(c => c.Name == secondName);
+    await repository.AddAsync(first, cancellationToken);
+    await repository.AddAsync(second, cancellationToken);
 
-    addedFirst.Id.Value.ShouldBeGreaterThan(0);
-    addedSecond.Id.Value.ShouldBeGreaterThan(0);
-    addedFirst.Id.ShouldNotBe(addedSecond.Id);
+    var all = await repository.ListAsync(cancellationToken);
+    all.Count.ShouldBe(2);
+    all[0].Id.Value.ShouldBeGreaterThan(0);
+    all[1].Id.Value.ShouldBeGreaterThan(0);
+    all[0].Id.ShouldNotBe(all[1].Id);
   }
 }
