@@ -4,11 +4,11 @@ using Microsoft.Data.Sqlite;
 
 namespace Clean.Architecture.IntegrationTests.Data;
 
-public abstract class BaseEfRepoTestFixture : IDisposable
+public abstract class BaseEfRepoTestFixture : IDisposable, IAsyncDisposable
 {
-  private readonly SqliteConnection _connection;
+  private readonly AppDbContext _dbContext;
 
-  protected AppDbContext _dbContext;
+  protected AppDbContext DbContext => _dbContext;
 
   protected BaseEfRepoTestFixture()
   {
@@ -44,9 +44,13 @@ public abstract class BaseEfRepoTestFixture : IDisposable
 
   public void Dispose()
   {
-    _dbContext.Dispose();
-    _connection.Dispose();
-
     GC.SuppressFinalize(this);
+    _dbContext.Dispose();
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    GC.SuppressFinalize(this);
+    await _dbContext.DisposeAsync();
   }
 }
