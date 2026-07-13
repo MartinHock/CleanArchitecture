@@ -1,40 +1,41 @@
 ﻿using Clean.Architecture.Core.ContributorAggregate;
 using Clean.Architecture.Infrastructure.Data;
-using Microsoft.Data.Sqlite;
 
 namespace Clean.Architecture.IntegrationTests.Data;
 
-public abstract class BaseEfRepoTestFixture : IDisposable
+public abstract class BaseEfRepoTestFixture : IDisposable, IAsyncDisposable
 {
-  private readonly SqliteConnection _connection;
+  private readonly AppDbContext _dbContext;
 
-  protected AppDbContext _dbContext;
+  protected AppDbContext DbContext => _dbContext;
 
   protected BaseEfRepoTestFixture()
   {
+    var options = CreateNewContextOptions();
+    _dbContext = new AppDbContext(options);
+  }
+
+  protected static DbContextOptions<AppDbContext> CreateNewContextOptions()
+  {
     var fakeEventDispatcher = Substitute.For<IDomainEventDispatcher>();
-
+    // Create a fresh service provider, and therefore a fresh
+    // InMemory database instance.
     var serviceProvider = new ServiceCollection()
-      .AddEntityFrameworkSqlite()
-      .AddScoped<IDomainEventDispatcher>(_ => fakeEventDispatcher)
-      .AddScoped<EventDispatchInterceptor>()
-      .BuildServiceProvider();
+        .AddEntityFrameworkInMemoryDatabase()
+        .AddScoped<IDomainEventDispatcher>(_ => fakeEventDispatcher)
+        .AddScoped<EventDispatchInterceptor>()
+        .BuildServiceProvider();
 
-    _connection = new SqliteConnection("Filename=:memory:");
-    _connection.Open();
-
+    // Create a new options instance telling the context to use an
+    // InMemory database and the new service provider.
     var interceptor = serviceProvider.GetRequiredService<EventDispatchInterceptor>();
 
-    var options = new DbContextOptionsBuilder<AppDbContext>()
-      .UseSqlite(_connection)
-      .UseInternalServiceProvider(serviceProvider)
-      .AddInterceptors(interceptor)
-      .Options;
+    var builder = new DbContextOptionsBuilder<AppDbContext>();
+    builder.UseInMemoryDatabase("cleanarchitecture")
+           .UseInternalServiceProvider(serviceProvider)
+           .AddInterceptors(interceptor);
 
-    _dbContext = new AppDbContext(options);
-
-    _dbContext.Database.EnsureDeleted();
-    _dbContext.Database.EnsureCreated();
+    return builder.Options;
   }
 
   protected EfRepository<Contributor> GetRepository()
@@ -44,9 +45,13 @@ public abstract class BaseEfRepoTestFixture : IDisposable
 
   public void Dispose()
   {
-    _dbContext.Dispose();
-    _connection.Dispose();
-
     GC.SuppressFinalize(this);
+    _dbContext.Dispose();
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    GC.SuppressFinalize(this);
+    await _dbContext.DisposeAsync();
   }
 }

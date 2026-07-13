@@ -31,7 +31,7 @@ public class ContributorList(CustomWebApplicationFactory<Program> factory)
     result.Items.ShouldContain(c => c.Name == SeedData.Contributor1Name);
     result.Items.ShouldContain(c => c.Name == SeedData.Contributor2Name);
 
-    Assert.Equal(SeedData.NUMBER_OF_CONTRIBUTORS, result.TotalCount);
+    Assert.Equal(SeedData.NumberOfContributors, result.TotalCount);
     Assert.Contains(result.Items, i => i.Name == SeedData.Contributor1Name.Value);
     Assert.Contains(result.Items, i => i.Name == SeedData.Contributor2Name.Value);
   }
