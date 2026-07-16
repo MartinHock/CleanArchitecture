@@ -9,6 +9,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="NimblePros.Metronome" />
     <PackageReference Include="SQLite" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
     <PackageReference Include="Vogen" />
   </ItemGroup>
   
