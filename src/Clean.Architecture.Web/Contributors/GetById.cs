@@ -1,6 +1,6 @@
-﻿using Clean.Architecture.Core.ContributorAggregate;
+using Clean.Architecture.Core.ContributorAggregate;
 using Clean.Architecture.UseCases.Contributors;
-using Clean.Architecture.UseCases.Contributors.Get;
+using Clean.Architecture.UseCases.Contributors.GetById;
 using Clean.Architecture.Web.Extensions;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -55,3 +55,4 @@ public sealed class GetContributorByIdMapper
   public override ContributorRecord FromEntity(ContributorDto e)
     => new(e.Id.Value, e.Name.Value, e.PhoneNumber.ToString());
 }
+

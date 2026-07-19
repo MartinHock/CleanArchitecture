@@ -1,20 +1,36 @@
-﻿using Clean.Architecture.Core.ContributorAggregate;
+using Clean.Architecture.Core.ContributorAggregate;
 using Clean.Architecture.Core.ContributorAggregate.Specifications;
 
-namespace Clean.Architecture.UseCases.Contributors.Get;
+namespace Clean.Architecture.UseCases.Contributors.GetById;
 
 /// <summary>
-/// Queries don't necessarily need to use repository methods, but they can if it's convenient
+/// Queries don't necessarily need to use repository methods, but they can if it's convenient.
 /// </summary>
-public class GetContributorHandler(IReadRepository<Contributor> _repository)
+public class GetContributorHandler(
+  IReadRepository<Contributor> repository)
   : IQueryHandler<GetContributorQuery, Result<ContributorDto>>
 {
-  public async ValueTask<Result<ContributorDto>> Handle(GetContributorQuery request, CancellationToken cancellationToken)
+  public async ValueTask<Result<ContributorDto>> Handle(
+    GetContributorQuery request,
+    CancellationToken cancellationToken)
   {
-    var spec = new ContributorByIdSpec(request.ContributorId);
-    var entity = await _repository.FirstOrDefaultAsync(spec, cancellationToken);
-    if (entity == null) return Result.NotFound();
+    ArgumentNullException.ThrowIfNull(request);
 
-    return new ContributorDto(entity.Id, entity.Name, entity.PhoneNumber ?? PhoneNumber.Unknown);
+    var spec = new ContributorByIdSpec(request.ContributorId);
+
+    var entity = await repository
+      .FirstOrDefaultAsync(spec, cancellationToken)
+      .ConfigureAwait(false);
+
+    if (entity is null)
+    {
+      return Result.NotFound();
+    }
+
+    return new ContributorDto(
+      entity.Id,
+      entity.Name,
+      entity.PhoneNumber ?? PhoneNumber.Unknown);
   }
 }
+
