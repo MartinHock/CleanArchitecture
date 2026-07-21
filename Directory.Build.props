@@ -3,6 +3,13 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <AnalysisLevel>latest-All</AnalysisLevel>
+    <!--
+      Keep NU1903 visible , but fail the build for the currently vulnerable
+      transitive -SQLItePCLRaw.lib.e_sqlit3 depedency.
+      The dependency is being pulled in by Microsoft.Data.Sqlite.Core 7.0.0 and 7.0.1, which are the only versions that support .NET 10.0.
+      and is handled separately in isue #1066, PR #1067, and PR #1067
+      remove this line when the dependency is updated to a non-vulnerable version, or when Microsoft.Data.Sqlite.Core is updated to a version that does not depend on it.
+     -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1903</WarningsNotAsErrors>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
