@@ -1,4 +1,5 @@
 ﻿using Clean.Architecture.Core.ContributorAggregate;
+
 // CA1716 flags the namespace segment "Get" because it conflicts with a
 // reserved keyword in some .NET languages. Renaming the namespace changes
 // the public namespace and requires all references to be updated.
