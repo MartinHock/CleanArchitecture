@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Keep NU1903 visible without failing unrelated builds until #1067 updates the vulnerable transitive SQLite dependency. -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1903</WarningsNotAsErrors>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
