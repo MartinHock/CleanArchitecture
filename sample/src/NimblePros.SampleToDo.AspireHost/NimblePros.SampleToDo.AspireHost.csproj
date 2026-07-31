@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.1" />
 
@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,8 +20,7 @@
     <!-- The IsAspireProjectResource attribute tells .NET Aspire to treat this 
         reference as a standard project reference and not attempt to generate
         a metadata file -->
-    <ProjectReference Include="..\NimblePros.SampleToDo.ServiceDefaults\NimblePros.SampleToDo.ServiceDefaults.csproj"
-                      IsAspireProjectResource="false" />
+    <ProjectReference Include="..\NimblePros.SampleToDo.ServiceDefaults\NimblePros.SampleToDo.ServiceDefaults.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>
