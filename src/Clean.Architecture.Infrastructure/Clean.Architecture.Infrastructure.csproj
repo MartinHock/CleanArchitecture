@@ -16,6 +16,7 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="NimblePros.Metronome" />
     <PackageReference Include="SQLite" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
     <PackageReference Include="Vogen" />
   </ItemGroup>
   
