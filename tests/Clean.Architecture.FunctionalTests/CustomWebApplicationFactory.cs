@@ -76,32 +76,16 @@ public class CustomWebApplicationFactory<TProgram> :
 
   public override async ValueTask DisposeAsync()
   {
-    if (_disposed)
+    // Clean up environment variable
+    Environment.SetEnvironmentVariable("USE_SQL_SERVER", null);
+    if (_dbContainer != null)
     {
-      return;
+      await _dbContainer.DisposeAsync();
     }
 
-    _disposed = true;
-
-    try
-    {
-      await base.DisposeAsync();
-    }
-    finally
-    {
-      try
-      {
-        if (_dbContainer != null)
-        {
-          await _dbContainer.DisposeAsync();
-          _dbContainer = null;
-        }
-      }
-      finally
-      {
-        DeleteSqliteDatabaseFiles();
-      }
-    }
+    await base.DisposeAsync();
+    GC.SuppressFinalize(this);
+  }
 
     GC.SuppressFinalize(this);
   }
@@ -133,17 +117,15 @@ public class CustomWebApplicationFactory<TProgram> :
       // Functional tests use EnsureCreated to avoid migration-script coupling.
       db.Database.EnsureCreated();
 
-      // Seed the database only if it has not already been seeded.
-      SeedData.InitializeAsync(db).GetAwaiter().GetResult();
-    }
-    catch (Exception ex)
-    {
-      logger.LogError(
-        ex,
-        "An error occurred seeding the functional test database. Error: {ExceptionMessage}",
-        ex.Message);
-
-      throw;
+        // Seed the database with test data only if it has not been seeded yet.
+        // This is safe for container reuse across test runs and multiple fixture instances.
+        SeedData.InitializeAsync(db).GetAwaiter().GetResult();
+      }
+      catch (Exception ex)
+      {
+        logger.LogError(ex, "An error occurred seeding the database with test messages. Error: {ExceptionMessage}", ex.Message);
+        throw;
+      }
     }
 
     return host;

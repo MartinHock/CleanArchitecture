@@ -12,12 +12,10 @@ public class DockerAvailabilityTests
 
     try
     {
-      await using var container = new MsSqlBuilder(
-          "mcr.microsoft.com/mssql/server:2025-latest")
-        .WithPassword("Your_password123!")
-        .Build();
-
-      await container.StartAsync(cancellationToken);
+      // Ping the Docker daemon directly using the Docker client.
+      // This has no side effects on container lifecycle or Testcontainers internals.
+      using var client = new DockerClientBuilder().Build();
+      await client.System.PingAsync(cancellationToken);
     }
     catch (DockerUnavailableException)
     {
