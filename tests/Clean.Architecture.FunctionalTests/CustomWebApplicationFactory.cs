@@ -1,4 +1,4 @@
-using Clean.Architecture.Infrastructure.Data;
+﻿using Clean.Architecture.Infrastructure.Data;
 using DotNet.Testcontainers.Builders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,7 +19,6 @@ public class CustomWebApplicationFactory<TProgram> :
     $"clean-architecture-functional-tests-{Guid.NewGuid():N}.db");
 
   private MsSqlContainer? _dbContainer;
-  private bool _disposed;
 
   public CustomWebApplicationFactory()
   {
@@ -87,9 +86,6 @@ public class CustomWebApplicationFactory<TProgram> :
     GC.SuppressFinalize(this);
   }
 
-    GC.SuppressFinalize(this);
-  }
-
   /// <summary>
   /// Overriding CreateHost to avoid creating a separate ServiceProvider per this thread:
   /// https://github.com/dotnet-architecture/eShopOnWeb/issues/465
@@ -117,15 +113,14 @@ public class CustomWebApplicationFactory<TProgram> :
       // Functional tests use EnsureCreated to avoid migration-script coupling.
       db.Database.EnsureCreated();
 
-        // Seed the database with test data only if it has not been seeded yet.
-        // This is safe for container reuse across test runs and multiple fixture instances.
-        SeedData.InitializeAsync(db).GetAwaiter().GetResult();
-      }
-      catch (Exception ex)
-      {
-        logger.LogError(ex, "An error occurred seeding the database with test messages. Error: {ExceptionMessage}", ex.Message);
-        throw;
-      }
+      // Seed the database with test data only if it has not been seeded yet.
+      // This is safe for container reuse across test runs and multiple fixture instances.
+      SeedData.InitializeAsync(db).GetAwaiter().GetResult();
+    }
+    catch (Exception ex)
+    {
+      logger.LogError(ex, "An error occurred seeding the database with test messages. Error: {ExceptionMessage}", ex.Message);
+      throw;
     }
 
     return host;
@@ -213,28 +208,6 @@ public class CustomWebApplicationFactory<TProgram> :
     catch
     {
       // Preserve the original container-start exception or continue with SQLite.
-    }
-  }
-
-  private void DeleteSqliteDatabaseFiles()
-  {
-    DeleteFileIfItExists(_sqliteDatabasePath);
-    DeleteFileIfItExists($"{_sqliteDatabasePath}-shm");
-    DeleteFileIfItExists($"{_sqliteDatabasePath}-wal");
-  }
-
-  private static void DeleteFileIfItExists(string path)
-  {
-    try
-    {
-      if (File.Exists(path))
-      {
-        File.Delete(path);
-      }
-    }
-    catch
-    {
-      // Test cleanup must not hide the actual test result.
     }
   }
 }
