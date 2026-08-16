@@ -32,6 +32,16 @@
     <PackageVersion Include="Scalar.AspNetCore" Version="2.16.18" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
-    <PackageVersion Include="Vogen" Version="8.0.7" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="SQLite" Version="3.13.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
+    <PackageVersion Include="Testcontainers" Version="4.3.0" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="4.3.0" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="9.5.1" />
+    <PackageVersion Include="Vogen" Version="8.0.5" />
+    <PackageVersion Include="MessagePack" Version="3.1.8" />
   </ItemGroup>
 </Project>
