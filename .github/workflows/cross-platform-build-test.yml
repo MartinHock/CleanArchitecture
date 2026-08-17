@@ -64,19 +64,19 @@ jobs:
         run: dotnet build Clean.Architecture.slnx --configuration ${{ matrix.configuration }} --no-restore --verbosity minimal
 
       # Unit tests - fast, no external dependencies
-      # TRX logger + code coverage for detailed reports
+      # TRX report for detailed results
       - name: Run Unit Tests (${{ matrix.configuration }})
-        run: dotnet test tests/Clean.Architecture.UnitTests/Clean.Architecture.UnitTests.csproj --configuration ${{ matrix.configuration }} --no-build --verbosity normal --logger "trx" --collect:"XPlat Code Coverage"
+        run: dotnet test tests/Clean.Architecture.UnitTests/Clean.Architecture.UnitTests.csproj --configuration ${{ matrix.configuration }} --no-build --report-xunit-trx
 
       # Integration tests - may have external dependencies
       # continue-on-error: true allows workflow to complete even if tests fail
       - name: Run Integration Tests (${{ matrix.configuration }})
-        run: dotnet test tests/Clean.Architecture.IntegrationTests/Clean.Architecture.IntegrationTests.csproj --configuration ${{ matrix.configuration }} --no-build --verbosity normal --logger "trx" --collect:"XPlat Code Coverage"
+        run: dotnet test tests/Clean.Architecture.IntegrationTests/Clean.Architecture.IntegrationTests.csproj --configuration ${{ matrix.configuration }} --no-build --report-xunit-trx
         continue-on-error: true  # Don't fail entire workflow on integration test issues
 
       # Functional tests - filter excludes Docker-dependent tests in CI
       - name: Run Functional Tests
-        run: dotnet test tests/Clean.Architecture.FunctionalTests/Clean.Architecture.FunctionalTests.csproj --configuration ${{ matrix.configuration }} --no-build --verbosity normal --logger "trx" --filter "FullyQualifiedName!~DockerAvailabilityTests" --collect:"XPlat Code Coverage"
+        run: dotnet test tests/Clean.Architecture.FunctionalTests/Clean.Architecture.FunctionalTests.csproj --configuration ${{ matrix.configuration }} --no-build --report-xunit-trx --filter "FullyQualifiedName!~DockerAvailabilityTests"
         continue-on-error: true  # Don't fail entire workflow on functional test issues
 
       # Upload test results even if tests failed (if: always())
@@ -86,14 +86,5 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: test-results-${{ matrix.os }}-${{ matrix.configuration }}
-          path: '**/TestResults/**/*.trx'
-          retention-days: 30
-
-      # Code coverage reports for quality tracking
-      - name: Upload Coverage
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: coverage-${{ matrix.os }}-${{ matrix.configuration }}
-          path: '**/TestResults/**/coverage.cobertura.xml'
+          path: 'TestResults/**/*.trx'
           retention-days: 30
