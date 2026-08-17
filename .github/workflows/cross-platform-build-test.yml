@@ -88,3 +88,17 @@ jobs:
           name: test-results-${{ matrix.os }}-${{ matrix.configuration }}
           path: 'TestResults/**/*.trx'
           retention-days: 30
+
+  build:
+    name: build
+    needs: build-and-test
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify cross-platform build result
+        run: |
+          if [ "${{ needs.build-and-test.result }}" != "success" ]; then
+            echo "Cross-platform build matrix did not succeed."
+            exit 1
+          fi
