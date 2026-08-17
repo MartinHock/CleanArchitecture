@@ -32,7 +32,7 @@
     <PackageVersion Include="NimblePros.Metronome" Version="0.4.1" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="ReportGenerator" Version="5.5.11" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.18" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.20" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
@@ -42,8 +42,8 @@
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
     <PackageVersion Include="Docker.DotNet.Enhanced" Version="4.3.3" />
-    <PackageVersion Include="Testcontainers" Version="4.13.0" />
-    <PackageVersion Include="Testcontainers.MsSql" Version="4.13.0" />
+    <PackageVersion Include="Testcontainers" Version="4.14.0" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="4.14.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.4.6" />
