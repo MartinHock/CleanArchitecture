@@ -5,6 +5,7 @@ module.exports = {
   requireConfig: 'ignored',
   baseBranchPatterns: ['poc/renovate-grouped-updates'],
   enabledManagers: ['nuget'],
+  includePaths: ['Directory.Packages.props'],
   dependencyDashboard: false,
   prConcurrentLimit: 10,
   packageRules: [
