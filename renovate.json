@@ -6,6 +6,9 @@
   "enabledManagers": [
     "nuget"
   ],
+  "includePaths": [
+    "Directory.Packages.props"
+  ],
   "baseBranchPatterns": [
     "poc/renovate-grouped-updates"
   ],
