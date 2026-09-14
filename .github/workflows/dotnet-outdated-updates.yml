@@ -56,8 +56,6 @@ jobs:
         id: changes
         shell: bash
         run: |
-          git diff --check
-
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No non-major package updates are available."
@@ -75,11 +73,16 @@ jobs:
             exit 1
           fi
 
+          # dotnet-outdated 4.8.1 currently removes the final newline from
+          # Directory.Packages.props (dotnet-outdated/dotnet-outdated#747).
+          # Normalize it before committing so the generated PR stays clean.
           last_byte="$(tail -c 1 Directory.Packages.props | od -An -t x1 | tr -d '[:space:]')"
           if [ "$last_byte" != "0a" ]; then
-            echo "::error::Directory.Packages.props no longer ends with a newline."
-            exit 1
+            echo "::warning::Restoring final newline removed by dotnet-outdated."
+            printf '\n' >> Directory.Packages.props
           fi
+
+          git diff --check
 
       - name: Create or update grouped update PR
         if: steps.changes.outputs.changed == 'true'
@@ -116,4 +119,4 @@ jobs:
             --head "$UPDATE_BRANCH" \
             --base "$BASE_BRANCH" \
             --title "Update non-major NuGet packages" \
-            --body "Automated non-major NuGet update generated with \`dotnet-outdated\` $DOTNET_OUTDATED_VERSION.\n\nCommand policy: \`--upgrade --version-lock Major --pre-release Never\`. Major-version updates remain outside this PR for separate review.\n\nThis POC also verifies that the tool changes only \`Directory.Packages.props\` and preserves its final newline."
+            --body "Automated non-major NuGet update generated with \`dotnet-outdated\` $DOTNET_OUTDATED_VERSION.\n\nCommand policy: \`--upgrade --version-lock Major --pre-release Never\`. Major-version updates remain outside this PR for separate review.\n\nThe workflow verifies that the tool changes only \`Directory.Packages.props\` and normalizes the known final-newline issue before committing."
