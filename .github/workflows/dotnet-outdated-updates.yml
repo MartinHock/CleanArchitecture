@@ -42,6 +42,17 @@ jobs:
             8.0.x
             10.0.x
 
+      - name: Record package-file formatting
+        id: package_file
+        shell: bash
+        run: |
+          last_byte="$(tail -c 1 Directory.Packages.props | od -An -t x1 | tr -d '[:space:]')"
+          if [ "$last_byte" = "0a" ]; then
+            echo "final_newline=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "final_newline=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install dotnet-outdated
         run: dotnet tool install --global dotnet-outdated-tool --version "$DOTNET_OUTDATED_VERSION"
 
@@ -55,6 +66,8 @@ jobs:
       - name: Validate generated changes
         id: changes
         shell: bash
+        env:
+          ORIGINAL_FINAL_NEWLINE: ${{ steps.package_file.outputs.final_newline }}
         run: |
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -73,14 +86,27 @@ jobs:
             exit 1
           fi
 
-          # dotnet-outdated 4.8.1 currently removes the final newline from
-          # Directory.Packages.props (dotnet-outdated/dotnet-outdated#747).
-          # Normalize it before committing so the generated PR stays clean.
-          last_byte="$(tail -c 1 Directory.Packages.props | od -An -t x1 | tr -d '[:space:]')"
-          if [ "$last_byte" != "0a" ]; then
-            echo "::warning::Restoring final newline removed by dotnet-outdated."
-            printf '\n' >> Directory.Packages.props
-          fi
+          # Preserve the file's original final-newline state. This also guards
+          # against dotnet-outdated/dotnet-outdated#747 without creating a
+          # formatting-only diff when the source file already has no newline.
+          ORIGINAL_FINAL_NEWLINE="$ORIGINAL_FINAL_NEWLINE" python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          path = Path("Directory.Packages.props")
+          data = path.read_bytes()
+          should_end_with_newline = os.environ["ORIGINAL_FINAL_NEWLINE"] == "true"
+
+          if should_end_with_newline and not data.endswith(b"\n"):
+              data += b"\n"
+          elif not should_end_with_newline:
+              if data.endswith(b"\r\n"):
+                  data = data[:-2]
+              elif data.endswith(b"\n"):
+                  data = data[:-1]
+
+          path.write_bytes(data)
+          PY
 
           git diff --check
 
@@ -119,4 +145,4 @@ jobs:
             --head "$UPDATE_BRANCH" \
             --base "$BASE_BRANCH" \
             --title "Update non-major NuGet packages" \
-            --body "Automated non-major NuGet update generated with \`dotnet-outdated\` $DOTNET_OUTDATED_VERSION.\n\nCommand policy: \`--upgrade --version-lock Major --pre-release Never\`. Major-version updates remain outside this PR for separate review.\n\nThe workflow verifies that the tool changes only \`Directory.Packages.props\` and normalizes the known final-newline issue before committing."
+            --body "Automated non-major NuGet update generated with \`dotnet-outdated\` $DOTNET_OUTDATED_VERSION.\n\nCommand policy: \`--upgrade --version-lock Major --pre-release Never\`. Major-version updates remain outside this PR for separate review.\n\nThe workflow verifies that the tool changes only \`Directory.Packages.props\` and preserves the file's existing final-newline state."
