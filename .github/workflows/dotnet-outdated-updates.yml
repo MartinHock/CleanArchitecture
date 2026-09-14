@@ -1,0 +1,119 @@
+name: Automated NuGet Updates (dotnet-outdated POC)
+
+on:
+  push:
+    branches:
+      - poc/dotnet-outdated-automated-updates
+    paths:
+      - '.github/workflows/dotnet-outdated-updates.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 7 * * 1'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dotnet-outdated-nuget-updates
+  cancel-in-progress: false
+
+env:
+  DOTNET_OUTDATED_VERSION: '4.8.1'
+  UPDATE_BRANCH: automation/dotnet-outdated-non-major
+
+jobs:
+  update-nuget:
+    name: Update non-major NuGet packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      # dotnet-outdated 4.8.1 targets .NET 8; the repository itself builds with .NET 10.
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Install dotnet-outdated
+        run: dotnet tool install --global dotnet-outdated-tool --version "$DOTNET_OUTDATED_VERSION"
+
+      - name: Update non-major NuGet packages
+        run: >-
+          dotnet outdated Clean.Architecture.slnx
+          --upgrade
+          --version-lock Major
+          --pre-release Never
+
+      - name: Validate generated changes
+        id: changes
+        shell: bash
+        run: |
+          git diff --check
+
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No non-major package updates are available."
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "Changed files:"
+          git diff --name-only
+
+          unexpected_files="$(git diff --name-only | grep -v '^Directory\.Packages\.props$' || true)"
+          if [ -n "$unexpected_files" ]; then
+            echo "::error::dotnet-outdated changed files outside Directory.Packages.props:"
+            echo "$unexpected_files"
+            exit 1
+          fi
+
+          last_byte="$(tail -c 1 Directory.Packages.props | od -An -t x1 | tr -d '[:space:]')"
+          if [ "$last_byte" != "0a" ]; then
+            echo "::error::Directory.Packages.props no longer ends with a newline."
+            exit 1
+          fi
+
+      - name: Create or update grouped update PR
+        if: steps.changes.outputs.changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B "$UPDATE_BRANCH"
+          git add Directory.Packages.props
+          git commit -m "Update non-major NuGet packages"
+
+          git fetch origin "$UPDATE_BRANCH" || true
+          git push --force-with-lease origin "$UPDATE_BRANCH"
+
+          existing_pr="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$UPDATE_BRANCH" \
+            --base "$BASE_BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          if [ -n "$existing_pr" ]; then
+            echo "Updated existing PR #$existing_pr"
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$UPDATE_BRANCH" \
+            --base "$BASE_BRANCH" \
+            --title "Update non-major NuGet packages" \
+            --body "Automated non-major NuGet update generated with \`dotnet-outdated\` $DOTNET_OUTDATED_VERSION.\n\nCommand policy: \`--upgrade --version-lock Major --pre-release Never\`. Major-version updates remain outside this PR for separate review.\n\nThis POC also verifies that the tool changes only \`Directory.Packages.props\` and preserves its final newline."
