@@ -63,21 +63,17 @@ jobs:
       - name: Build (${{ matrix.configuration }})
         run: dotnet build Clean.Architecture.slnx --configuration ${{ matrix.configuration }} --no-restore --verbosity minimal
 
-      # Unit tests - fast, no external dependencies
-      # TRX logger + code coverage for detailed reports
+      # MTP v2 writes TRX and Cobertura reports to the requested results directory.
       - name: Run Unit Tests (${{ matrix.configuration }})
-        run: dotnet test tests/Clean.Architecture.UnitTests/Clean.Architecture.UnitTests.csproj --configuration ${{ matrix.configuration }} --no-build --verbosity normal --logger "trx" --collect:"XPlat Code Coverage"
+        run: dotnet test --project tests/Clean.Architecture.UnitTests/Clean.Architecture.UnitTests.csproj --configuration ${{ matrix.configuration }} --no-build --minimum-expected-tests 1 --results-directory TestResults/UnitTests -- --report-trx --coverage --coverage-output-format cobertura
 
       # Integration tests - may have external dependencies
-      # continue-on-error: true allows workflow to complete even if tests fail
       - name: Run Integration Tests (${{ matrix.configuration }})
-        run: dotnet test tests/Clean.Architecture.IntegrationTests/Clean.Architecture.IntegrationTests.csproj --configuration ${{ matrix.configuration }} --no-build --verbosity normal --logger "trx" --collect:"XPlat Code Coverage"
-        continue-on-error: true  # Don't fail entire workflow on integration test issues
+        run: dotnet test --project tests/Clean.Architecture.IntegrationTests/Clean.Architecture.IntegrationTests.csproj --configuration ${{ matrix.configuration }} --no-build --minimum-expected-tests 1 --results-directory TestResults/IntegrationTests -- --report-trx --coverage --coverage-output-format cobertura
 
       # Functional tests - filter excludes Docker-dependent tests in CI
       - name: Run Functional Tests
-        run: dotnet test tests/Clean.Architecture.FunctionalTests/Clean.Architecture.FunctionalTests.csproj --configuration ${{ matrix.configuration }} --no-build --verbosity normal --logger "trx" --filter "FullyQualifiedName!~DockerAvailabilityTests" --collect:"XPlat Code Coverage"
-        continue-on-error: true  # Don't fail entire workflow on functional test issues
+        run: dotnet test --project tests/Clean.Architecture.FunctionalTests/Clean.Architecture.FunctionalTests.csproj --configuration ${{ matrix.configuration }} --no-build --minimum-expected-tests 1 --results-directory TestResults/FunctionalTests -- --report-trx --coverage --coverage-output-format cobertura --filter-not-class Clean.Architecture.FunctionalTests.DockerAvailabilityTests
 
       # Upload test results even if tests failed (if: always())
       # Retention 30 days balances storage costs and debugging needs
@@ -86,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: test-results-${{ matrix.os }}-${{ matrix.configuration }}
-          path: '**/TestResults/**/*.trx'
+          path: 'TestResults/**/*.trx'
           retention-days: 30
 
       # Code coverage reports for quality tracking
@@ -95,5 +91,5 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: coverage-${{ matrix.os }}-${{ matrix.configuration }}
-          path: '**/TestResults/**/coverage.cobertura.xml'
+          path: 'TestResults/**/*.cobertura.xml'
           retention-days: 30
