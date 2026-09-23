@@ -1,5 +1,6 @@
 ﻿using Clean.Architecture.Infrastructure.Data;
 using DotNet.Testcontainers.Builders;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +11,8 @@ namespace Clean.Architecture.FunctionalTests;
 public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram>, IAsyncLifetime where TProgram : class
 {
   private MsSqlContainer? _dbContainer;
-  private readonly string _sqliteDatabasePath = Path.Combine(Path.GetTempPath(), $"clean-architecture-functional-{Guid.NewGuid():N}.sqlite");
+  private readonly string _sqliteConnectionString = $"Data Source=clean-architecture-functional-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
+  private SqliteConnection? _sqliteKeepAliveConnection;
 
   public async ValueTask InitializeAsync()
   {
@@ -18,6 +20,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     // The macOS runner has no Docker daemon. Both run against SQLite in CI.
     if (string.Equals(Environment.GetEnvironmentVariable("SKIP_SQL_SERVER_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase))
     {
+      OpenSqliteDatabase();
       return;
     }
 
@@ -32,6 +35,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     {
       // Docker is not available; fall back to SQLite (configured via appsettings.Testing.json)
       _dbContainer = null;
+      OpenSqliteDatabase();
     }
   }
 
@@ -44,10 +48,15 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     {
       await _dbContainer.DisposeAsync();
     }
-    else if (File.Exists(_sqliteDatabasePath))
-    {
-      File.Delete(_sqliteDatabasePath);
-    }
+    _sqliteKeepAliveConnection?.Dispose();
+  }
+
+  private void OpenSqliteDatabase()
+  {
+    // A named in-memory database stays available to EF's separate connections
+    // until the last connection closes.
+    _sqliteKeepAliveConnection = new SqliteConnection(_sqliteConnectionString);
+    _sqliteKeepAliveConnection.Open();
   }
 
   /// <summary>
@@ -136,7 +145,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             }
             else
             {
-              options.UseSqlite($"Data Source={_sqliteDatabasePath}");
+              options.UseSqlite(_sqliteConnectionString);
             }
 
             options.AddInterceptors(provider.GetRequiredService<EventDispatchInterceptor>());
