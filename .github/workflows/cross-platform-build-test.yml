@@ -7,6 +7,7 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - 'sample/**'
       - 'Clean.Architecture.slnx'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
@@ -18,6 +19,7 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - 'sample/**'
       - 'Clean.Architecture.slnx'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
@@ -95,3 +97,21 @@ jobs:
           name: coverage-${{ matrix.os }}-${{ matrix.configuration }}
           path: 'TestResults/**/*.cobertura.xml'
           retention-days: 30
+
+  sample-tests:
+    name: Build & Test Sample (.NET 10)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+      - name: Restore sample
+        run: dotnet restore sample/NimblePros.SampleToDo.slnx
+      - name: Build sample
+        run: dotnet build sample/NimblePros.SampleToDo.slnx --configuration Release --no-restore
+      - name: Run sample tests
+        run: dotnet test --solution sample/NimblePros.SampleToDo.slnx --configuration Release --no-build --minimum-expected-tests 1
