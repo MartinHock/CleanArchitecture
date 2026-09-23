@@ -1,5 +1,8 @@
 ﻿using Clean.Architecture.Infrastructure.Data;
+using DotNet.Testcontainers.Builders;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.MsSql;
 
@@ -8,9 +11,19 @@ namespace Clean.Architecture.FunctionalTests;
 public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram>, IAsyncLifetime where TProgram : class
 {
   private MsSqlContainer? _dbContainer;
+  private readonly string _sqliteConnectionString = $"Data Source=clean-architecture-functional-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
+  private SqliteConnection? _sqliteKeepAliveConnection;
 
   public async ValueTask InitializeAsync()
   {
+    // Hosted Windows runners use Windows containers; SQL Server's image requires Linux.
+    // The macOS runner has no Docker daemon. Both run against SQLite in CI.
+    if (string.Equals(Environment.GetEnvironmentVariable("SKIP_SQL_SERVER_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase))
+    {
+      OpenSqliteDatabase();
+      return;
+    }
+
     try
     {
       _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest")
@@ -18,10 +31,11 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         .Build();
       await _dbContainer.StartAsync();
     }
-    catch (ArgumentException)
+    catch (Exception ex) when (ex is ArgumentException or DockerUnavailableException)
     {
       // Docker is not available; fall back to SQLite (configured via appsettings.Testing.json)
       _dbContainer = null;
+      OpenSqliteDatabase();
     }
   }
 
@@ -29,10 +43,20 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
   {
     // Clean up environment variable
     Environment.SetEnvironmentVariable("USE_SQL_SERVER", null);
+    await base.DisposeAsync();
     if (_dbContainer != null)
     {
       await _dbContainer.DisposeAsync();
     }
+    _sqliteKeepAliveConnection?.Dispose();
+  }
+
+  private void OpenSqliteDatabase()
+  {
+    // A named in-memory database stays available to EF's separate connections
+    // until the last connection closes.
+    _sqliteKeepAliveConnection = new SqliteConnection(_sqliteConnectionString);
+    _sqliteKeepAliveConnection.Open();
   }
 
   /// <summary>
@@ -92,7 +116,6 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         {
           if (_dbContainer != null)
           {
-            // Set the connection string to use the Testcontainer
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
               ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString()
@@ -101,27 +124,32 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         })
         .ConfigureServices(services =>
         {
-          if (_dbContainer != null)
+          // Program registers its DbContext before WebApplicationFactory applies
+          // test configuration, so replace that registration for both providers.
+          var descriptors = services.Where(
+            d => d.ServiceType == typeof(AppDbContext) ||
+                 d.ServiceType == typeof(DbContextOptions<AppDbContext>) ||
+                 d.ServiceType == typeof(IDbContextOptionsConfiguration<AppDbContext>))
+            .ToList();
+
+          foreach (var descriptor in descriptors)
           {
-            // Remove the app's ApplicationDbContext registration
-            var descriptors = services.Where(
-              d => d.ServiceType == typeof(AppDbContext) ||
-                   d.ServiceType == typeof(DbContextOptions<AppDbContext>))
-                  .ToList();
+            services.Remove(descriptor);
+          }
 
-            foreach (var descriptor in descriptors)
-            {
-              services.Remove(descriptor);
-            }
-
-            // Add ApplicationDbContext using the Testcontainers SQL Server instance
-            services.AddDbContext<AppDbContext>((provider, options) =>
+          services.AddDbContext<AppDbContext>((provider, options) =>
+          {
+            if (_dbContainer != null)
             {
               options.UseSqlServer(_dbContainer.GetConnectionString());
-              var interceptor = provider.GetRequiredService<EventDispatchInterceptor>();
-              options.AddInterceptors(interceptor);
-            });
-          }
+            }
+            else
+            {
+              options.UseSqlite(_sqliteConnectionString);
+            }
+
+            options.AddInterceptors(provider.GetRequiredService<EventDispatchInterceptor>());
+          });
         });
   }
 }
