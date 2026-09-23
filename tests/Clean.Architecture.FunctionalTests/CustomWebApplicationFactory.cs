@@ -9,6 +9,7 @@ namespace Clean.Architecture.FunctionalTests;
 public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram>, IAsyncLifetime where TProgram : class
 {
   private MsSqlContainer? _dbContainer;
+  private readonly string _sqliteDatabasePath = Path.Combine(Path.GetTempPath(), $"clean-architecture-functional-{Guid.NewGuid():N}.sqlite");
 
   public async ValueTask InitializeAsync()
   {
@@ -37,9 +38,14 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
   {
     // Clean up environment variable
     Environment.SetEnvironmentVariable("USE_SQL_SERVER", null);
+    await base.DisposeAsync();
     if (_dbContainer != null)
     {
       await _dbContainer.DisposeAsync();
+    }
+    else if (File.Exists(_sqliteDatabasePath))
+    {
+      File.Delete(_sqliteDatabasePath);
     }
   }
 
@@ -98,14 +104,19 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     builder
         .ConfigureAppConfiguration((context, config) =>
         {
-          if (_dbContainer != null)
-          {
-            // Set the connection string to use the Testcontainer
-            config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-              ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString()
-            });
-          }
+          // A file-backed SQLite database survives EF Core's separate connections.
+          // Clear the SQL Server defaults so the same fallback works on Windows.
+          config.AddInMemoryCollection(_dbContainer != null
+            ? new Dictionary<string, string?>
+              {
+                ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString()
+              }
+            : new Dictionary<string, string?>
+              {
+                ["ConnectionStrings:cleanarchitecture"] = null,
+                ["ConnectionStrings:DefaultConnection"] = null,
+                ["ConnectionStrings:SqliteConnection"] = $"Data Source={_sqliteDatabasePath}"
+              });
         })
         .ConfigureServices(services =>
         {
