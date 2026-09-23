@@ -1,6 +1,7 @@
 ﻿using Clean.Architecture.Infrastructure.Data;
 using DotNet.Testcontainers.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.MsSql;
 
@@ -118,7 +119,8 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
           // test configuration, so replace that registration for both providers.
           var descriptors = services.Where(
             d => d.ServiceType == typeof(AppDbContext) ||
-                 d.ServiceType == typeof(DbContextOptions<AppDbContext>))
+                 d.ServiceType == typeof(DbContextOptions<AppDbContext>) ||
+                 d.ServiceType == typeof(IDbContextOptionsConfiguration<AppDbContext>))
             .ToList();
 
           foreach (var descriptor in descriptors)
