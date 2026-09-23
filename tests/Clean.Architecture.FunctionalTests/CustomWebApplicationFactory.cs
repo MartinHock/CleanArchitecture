@@ -1,4 +1,5 @@
 ﻿using Clean.Architecture.Infrastructure.Data;
+using DotNet.Testcontainers.Builders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.MsSql;
@@ -18,7 +19,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         .Build();
       await _dbContainer.StartAsync();
     }
-    catch (ArgumentException)
+    catch (Exception ex) when (ex is ArgumentException or DockerUnavailableException)
     {
       // Docker is not available; fall back to SQLite (configured via appsettings.Testing.json)
       _dbContainer = null;
