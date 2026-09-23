@@ -12,6 +12,13 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
 
   public async ValueTask InitializeAsync()
   {
+    // Hosted Windows runners use Windows containers; SQL Server's image requires Linux.
+    // The macOS runner has no Docker daemon. Both run against SQLite in CI.
+    if (string.Equals(Environment.GetEnvironmentVariable("SKIP_SQL_SERVER_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase))
+    {
+      return;
+    }
+
     try
     {
       _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest")

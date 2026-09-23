@@ -74,6 +74,8 @@ jobs:
       # Functional tests - filter excludes Docker-dependent tests in CI
       - name: Run Functional Tests
         run: dotnet test --project tests/Clean.Architecture.FunctionalTests/Clean.Architecture.FunctionalTests.csproj --configuration ${{ matrix.configuration }} --no-build --minimum-expected-tests 1 --results-directory TestResults/FunctionalTests -- --report-trx --coverage --coverage-output-format cobertura --filter-not-class Clean.Architecture.FunctionalTests.DockerAvailabilityTests
+        env:
+          SKIP_SQL_SERVER_CONTAINER: ${{ matrix.os != 'ubuntu-latest' }}
 
       # Upload test results even if tests failed (if: always())
       # Retention 30 days balances storage costs and debugging needs
