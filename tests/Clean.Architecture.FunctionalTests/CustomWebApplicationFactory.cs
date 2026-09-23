@@ -104,43 +104,41 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
     builder
         .ConfigureAppConfiguration((context, config) =>
         {
-          // A file-backed SQLite database survives EF Core's separate connections.
-          // Clear the SQL Server defaults so the same fallback works on Windows.
-          config.AddInMemoryCollection(_dbContainer != null
-            ? new Dictionary<string, string?>
-              {
-                ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString()
-              }
-            : new Dictionary<string, string?>
-              {
-                ["ConnectionStrings:cleanarchitecture"] = null,
-                ["ConnectionStrings:DefaultConnection"] = null,
-                ["ConnectionStrings:SqliteConnection"] = $"Data Source={_sqliteDatabasePath}"
-              });
+          if (_dbContainer != null)
+          {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+              ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString()
+            });
+          }
         })
         .ConfigureServices(services =>
         {
-          if (_dbContainer != null)
+          // Program registers its DbContext before WebApplicationFactory applies
+          // test configuration, so replace that registration for both providers.
+          var descriptors = services.Where(
+            d => d.ServiceType == typeof(AppDbContext) ||
+                 d.ServiceType == typeof(DbContextOptions<AppDbContext>))
+            .ToList();
+
+          foreach (var descriptor in descriptors)
           {
-            // Remove the app's ApplicationDbContext registration
-            var descriptors = services.Where(
-              d => d.ServiceType == typeof(AppDbContext) ||
-                   d.ServiceType == typeof(DbContextOptions<AppDbContext>))
-                  .ToList();
+            services.Remove(descriptor);
+          }
 
-            foreach (var descriptor in descriptors)
-            {
-              services.Remove(descriptor);
-            }
-
-            // Add ApplicationDbContext using the Testcontainers SQL Server instance
-            services.AddDbContext<AppDbContext>((provider, options) =>
+          services.AddDbContext<AppDbContext>((provider, options) =>
+          {
+            if (_dbContainer != null)
             {
               options.UseSqlServer(_dbContainer.GetConnectionString());
-              var interceptor = provider.GetRequiredService<EventDispatchInterceptor>();
-              options.AddInterceptors(interceptor);
-            });
-          }
+            }
+            else
+            {
+              options.UseSqlite($"Data Source={_sqliteDatabasePath}");
+            }
+
+            options.AddInterceptors(provider.GetRequiredService<EventDispatchInterceptor>());
+          });
         });
   }
 }
