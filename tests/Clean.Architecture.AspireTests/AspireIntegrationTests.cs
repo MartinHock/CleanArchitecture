@@ -2,6 +2,14 @@ namespace Clean.Architecture.AspireTests.Tests;
 
 public class AspireIntegrationTests
 {
-    // Follow the link below to write you tests with Aspire
-    // https://learn.microsoft.com/en-us/dotnet/aspire/testing/write-your-first-test?pivots=xunit
+    [Fact]
+    public async Task AppHostDefinesExpectedResources()
+    {
+        await using var builder = await DistributedApplicationTestingBuilder
+            .CreateAsync<Projects.Clean_Architecture_AspireHost>();
+
+        Assert.Contains(builder.Resources, resource => resource.Name == "sqlserver");
+        Assert.Contains(builder.Resources, resource => resource.Name == "papercut");
+        Assert.Contains(builder.Resources, resource => resource.Name == "web");
+    }
 }
