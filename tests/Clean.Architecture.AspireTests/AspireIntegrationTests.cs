@@ -6,7 +6,7 @@ public class AspireIntegrationTests
     public async Task AppHostDefinesExpectedResources()
     {
         await using var builder = await DistributedApplicationTestingBuilder
-            .CreateAsync<Projects.Clean_Architecture_AspireHost>();
+            .CreateAsync<Projects.Clean_Architecture_AspireHost>(TestContext.Current.CancellationToken);
 
         Assert.Contains(builder.Resources, resource => resource.Name == "sqlserver");
         Assert.Contains(builder.Resources, resource => resource.Name == "papercut");
