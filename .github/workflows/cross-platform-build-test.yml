@@ -72,7 +72,7 @@ jobs:
       # Build the Aspire resource model without starting SQL Server or SMTP containers.
       - name: Run Aspire Model Tests
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet test --project tests/Clean.Architecture.AspireTests/Clean.Architecture.AspireTests.csproj --configuration ${{ matrix.configuration }} --no-build --minimum-expected-tests 1 --results-directory TestResults/AspireTests -- --report-trx
+        run: dotnet test --project tests/Clean.Architecture.AspireTests/Clean.Architecture.AspireTests.csproj --configuration ${{ matrix.configuration }} --minimum-expected-tests 1 --results-directory TestResults/AspireTests -- --report-trx
 
       # Integration tests - may have external dependencies
       - name: Run Integration Tests (${{ matrix.configuration }})
