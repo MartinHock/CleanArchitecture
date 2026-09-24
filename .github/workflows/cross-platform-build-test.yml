@@ -69,6 +69,11 @@ jobs:
       - name: Run Unit Tests (${{ matrix.configuration }})
         run: dotnet test --project tests/Clean.Architecture.UnitTests/Clean.Architecture.UnitTests.csproj --configuration ${{ matrix.configuration }} --no-build --minimum-expected-tests 1 --results-directory TestResults/UnitTests -- --report-trx --coverage --coverage-output-format cobertura
 
+      # Build the Aspire resource model without starting SQL Server or SMTP containers.
+      - name: Run Aspire Model Tests
+        if: matrix.os == 'ubuntu-latest'
+        run: dotnet test --project tests/Clean.Architecture.AspireTests/Clean.Architecture.AspireTests.csproj --configuration ${{ matrix.configuration }} --minimum-expected-tests 1 --results-directory TestResults/AspireTests -- --report-trx
+
       # Integration tests - may have external dependencies
       - name: Run Integration Tests (${{ matrix.configuration }})
         run: dotnet test --project tests/Clean.Architecture.IntegrationTests/Clean.Architecture.IntegrationTests.csproj --configuration ${{ matrix.configuration }} --no-build --minimum-expected-tests 1 --results-directory TestResults/IntegrationTests -- --report-trx --coverage --coverage-output-format cobertura
