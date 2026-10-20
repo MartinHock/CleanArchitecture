@@ -8,6 +8,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'sample/**'
+      - 'MinimalClean/**'
       - 'Clean.Architecture.slnx'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
@@ -20,6 +21,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'sample/**'
+      - 'MinimalClean/**'
       - 'Clean.Architecture.slnx'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
@@ -114,10 +116,25 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
-      # The AspireHost is outside these test projects and has an unrelated
-      # vulnerable transitive dependency in the existing sample solution.
+      # Run the sample test projects directly; the AspireHost is not required for these tests.
       - name: Run sample test projects
         run: |
           dotnet test --project sample/tests/NimblePros.SampleToDo.UnitTests/NimblePros.SampleToDo.UnitTests.csproj --configuration Release --minimum-expected-tests 1
           dotnet test --project sample/tests/NimblePros.SampleToDo.IntegrationTests/NimblePros.SampleToDo.IntegrationTests.csproj --configuration Release --minimum-expected-tests 1
           dotnet test --project sample/tests/NimblePros.SampleToDo.FunctionalTests/NimblePros.SampleToDo.FunctionalTests.csproj --configuration Release --minimum-expected-tests 1
+
+  minimal-clean-build:
+    name: Build MinimalClean (.NET 10)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+      - name: Restore MinimalClean
+        run: dotnet restore MinimalClean/MinimalClean.Architecture.slnx --verbosity normal
+      - name: Build MinimalClean
+        run: dotnet build MinimalClean/MinimalClean.Architecture.slnx --configuration Release --no-restore --verbosity minimal
