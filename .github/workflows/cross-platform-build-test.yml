@@ -8,10 +8,12 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'sample/**'
+      - 'MinimalClean/**'
       - 'Clean.Architecture.slnx'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'global.json'
+      - '.github/dependabot.yml'
       - '.github/workflows/cross-platform-build-test.yml'
   pull_request:
     branches:
@@ -20,10 +22,12 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'sample/**'
+      - 'MinimalClean/**'
       - 'Clean.Architecture.slnx'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'global.json'
+      - '.github/dependabot.yml'
       - '.github/workflows/cross-platform-build-test.yml'
   workflow_dispatch:
 
@@ -114,8 +118,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
-      # The AspireHost is outside these test projects and has an unrelated
-      # vulnerable transitive dependency in the existing sample solution.
+      # Run the sample test projects directly; the AspireHost is not required for these tests.
       - name: Run sample test projects
         run: |
           dotnet test --project sample/tests/NimblePros.SampleToDo.UnitTests/NimblePros.SampleToDo.UnitTests.csproj --configuration Release --minimum-expected-tests 1
