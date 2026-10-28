@@ -1,6 +1,7 @@
 ﻿using Clean.Architecture.Infrastructure.Data;
 using DotNet.Testcontainers.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.MsSql;
 
@@ -19,6 +20,7 @@ public class CustomWebApplicationFactory<TProgram> :
     $"clean-architecture-functional-tests-{Guid.NewGuid():N}.db");
 
   private MsSqlContainer? _dbContainer;
+  private Func<MsSqlContainer, Task>? _startContainerOverride;
 
   public CustomWebApplicationFactory()
   {
@@ -39,6 +41,15 @@ public class CustomWebApplicationFactory<TProgram> :
     };
   }
 
+  internal static CustomWebApplicationFactory<TProgram> CreateWithDockerUnavailable(
+    TestDatabaseProvider databaseProvider)
+  {
+    var factory = CreateWithProvider(databaseProvider);
+    factory._startContainerOverride = _ =>
+      Task.FromException(new DockerUnavailableException("Simulated Docker unavailability"));
+    return factory;
+  }
+
   public async ValueTask InitializeAsync()
   {
     if (_requestedDatabaseProvider == TestDatabaseProvider.Sqlite)
@@ -56,7 +67,14 @@ public class CustomWebApplicationFactory<TProgram> :
         .WithPassword("Your_password123!")
         .Build();
 
-      await container.StartAsync();
+      if (_startContainerOverride is { } startContainer)
+      {
+        await startContainer(container);
+      }
+      else
+      {
+        await container.StartAsync();
+      }
       _dbContainer = container;
       ActiveDatabaseProvider = TestDatabaseProvider.SqlServer;
     }
@@ -151,7 +169,7 @@ public class CustomWebApplicationFactory<TProgram> :
 
     var connectionString = useSqlServer
       ? _dbContainer!.GetConnectionString()
-      : $"Data Source={_sqliteDatabasePath}";
+      : $"Data Source={_sqliteDatabasePath};Pooling=False";
 
     builder
       .ConfigureAppConfiguration((_, config) =>
@@ -172,7 +190,9 @@ public class CustomWebApplicationFactory<TProgram> :
             descriptor =>
               descriptor.ServiceType == typeof(AppDbContext) ||
               descriptor.ServiceType ==
-                typeof(DbContextOptions<AppDbContext>))
+                typeof(DbContextOptions<AppDbContext>) ||
+              descriptor.ServiceType ==
+                typeof(IDbContextOptionsConfiguration<AppDbContext>))
           .ToList();
 
         foreach (var descriptor in descriptors)
