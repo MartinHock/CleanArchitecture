@@ -10,8 +10,9 @@ public class SqliteFallbackTests
   public async Task AutoProvider_FallsBackToSqlite_WhenDockerIsUnavailable()
   {
     await using var factory =
-      CustomWebApplicationFactory<Program>.CreateWithDockerUnavailable(
-        TestDatabaseProvider.Auto);
+      CustomWebApplicationFactory<Program>.CreateWithContainerStartFailure(
+        TestDatabaseProvider.Auto,
+        new DotNet.Testcontainers.Builders.DockerUnavailableException("Simulated Docker outage"));
 
     await factory.InitializeAsync();
     using var client = factory.CreateClient();
@@ -27,11 +28,25 @@ public class SqliteFallbackTests
   public async Task ExplicitSqlServer_DoesNotFallback_WhenDockerIsUnavailable()
   {
     await using var factory =
-      CustomWebApplicationFactory<Program>.CreateWithDockerUnavailable(
-        TestDatabaseProvider.SqlServer);
+      CustomWebApplicationFactory<Program>.CreateWithContainerStartFailure(
+        TestDatabaseProvider.SqlServer,
+        new DotNet.Testcontainers.Builders.DockerUnavailableException("Simulated Docker outage"));
 
     await Should.ThrowAsync<DotNet.Testcontainers.Builders.DockerUnavailableException>(
       async () => await factory.InitializeAsync());
+  }
+
+  [Fact]
+  public async Task AutoProvider_PropagatesUnexpectedContainerStartFailure()
+  {
+    await using var factory =
+      CustomWebApplicationFactory<Program>.CreateWithContainerStartFailure(
+        TestDatabaseProvider.Auto,
+        new InvalidOperationException("Simulated unexpected startup failure"));
+
+    await Should.ThrowAsync<InvalidOperationException>(
+      async () => await factory.InitializeAsync());
+    factory.ActiveDatabaseProvider.ShouldBe(TestDatabaseProvider.Auto);
   }
 
   [Fact]

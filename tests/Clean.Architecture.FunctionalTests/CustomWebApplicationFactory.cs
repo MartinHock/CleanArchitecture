@@ -41,12 +41,12 @@ public class CustomWebApplicationFactory<TProgram> :
     };
   }
 
-  internal static CustomWebApplicationFactory<TProgram> CreateWithDockerUnavailable(
-    TestDatabaseProvider databaseProvider)
+  internal static CustomWebApplicationFactory<TProgram> CreateWithContainerStartFailure(
+    TestDatabaseProvider databaseProvider,
+    Exception exception)
   {
     var factory = CreateWithProvider(databaseProvider);
-    factory._startContainerOverride = _ =>
-      Task.FromException(new DockerUnavailableException("Simulated Docker unavailability"));
+    factory._startContainerOverride = _ => Task.FromException(exception);
     return factory;
   }
 
