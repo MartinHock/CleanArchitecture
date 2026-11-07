@@ -21,7 +21,7 @@ jobs:
         id: audit
         shell: pwsh
         continue-on-error: true
-        run: ./scripts/dependency-audit.ps1 -OutputDirectory "$RUNNER_TEMP/dependency-audit"
+        run: ./scripts/dependency-audit.ps1 -OutputDirectory "$env:RUNNER_TEMP/dependency-audit"
       - name: Summary
         if: always()
         shell: bash
