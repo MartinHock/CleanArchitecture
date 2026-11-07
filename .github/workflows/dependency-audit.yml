@@ -1,0 +1,40 @@
+name: Dependency audit (read-only POC)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 7 * * 1'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - name: Install dotnet-outdated
+        run: dotnet tool install --global dotnet-outdated-tool --version 4.8.1
+      - name: Analyze
+        id: audit
+        shell: pwsh
+        continue-on-error: true
+        run: ./scripts/dependency-audit.ps1 -OutputDirectory "$RUNNER_TEMP/dependency-audit"
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/dependency-audit/summary.md" ]; then
+            cat "$RUNNER_TEMP/dependency-audit/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit
+          path: ${{ runner.temp }}/dependency-audit/
+      - name: Audit health
+        if: steps.audit.outcome == 'failure'
+        run: exit 1
