@@ -1,0 +1,52 @@
+﻿name: NuGet security audit
+
+on:
+  pull_request:
+    paths:
+      - '**/*.csproj'
+      - '**/Directory.Packages.props'
+      - '**/Directory.Build.props'
+      - '**/NuGet.Config'
+      - '**/nuget.config'
+      - '**/*.slnx'
+      - 'global.json'
+      - '.github/workflows/nuget-security-audit.yml'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.csproj'
+      - '**/Directory.Packages.props'
+      - '**/Directory.Build.props'
+      - '**/NuGet.Config'
+      - '**/nuget.config'
+      - '**/*.slnx'
+      - 'global.json'
+      - '.github/workflows/nuget-security-audit.yml'
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: NuGet audit (${{ matrix.scope }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scope: root
+            solution: Clean.Architecture.slnx
+          - scope: minimal
+            solution: MinimalClean/MinimalClean.Architecture.slnx
+          - scope: sample
+            solution: sample/NimblePros.SampleToDo.slnx
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore with vulnerability audit enabled
+        run: dotnet restore '${{ matrix.solution }}' -p:NuGetAudit=true -p:NuGetAuditLevel=high -p:TreatWarningsAsErrors=true --verbosity minimal
