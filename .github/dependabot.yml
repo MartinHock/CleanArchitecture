@@ -6,16 +6,33 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   groups:
-    microsoft-packages:
+    microsoft-packages-patch:
+      patterns:
+      - "Microsoft.*"
+      exclude-patterns:
+      - "Microsoft.NET.Test.Sdk"
+      update-types:
+      - patch
+
+    microsoft-packages-minor:
       patterns:
       - "Microsoft.*"
       exclude-patterns:
       - "Microsoft.NET.Test.Sdk"
       update-types:
       - minor
+
+    test-packages-patch:
+      patterns:
+      - "Microsoft.NET.Test.Sdk"
+      - "xunit*"
+      - "NUnit*"
+      - "coverlet*"
+      - "FluentAssertions"
+      update-types:
       - patch
 
-    test-packages:
+    test-packages-minor:
       patterns:
       - "Microsoft.NET.Test.Sdk"
       - "xunit*"
@@ -24,9 +41,21 @@ updates:
       - "FluentAssertions"
       update-types:
       - minor
+
+    all-other-non-major-patch:
+      patterns:
+      - "*"
+      exclude-patterns:
+      - "Microsoft.*"
+      - "Microsoft.NET.Test.Sdk"
+      - "xunit*"
+      - "NUnit*"
+      - "coverlet*"
+      - "FluentAssertions"
+      update-types:
       - patch
 
-    all-other-non-major:
+    all-other-non-major-minor:
       patterns:
       - "*"
       exclude-patterns:
@@ -38,7 +67,6 @@ updates:
       - "FluentAssertions"
       update-types:
       - minor
-      - patch
 
 - package-ecosystem: nuget
   directory: "/MinimalClean"
@@ -46,16 +74,33 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   groups:
-    microsoft-packages:
+    microsoft-packages-patch:
+      patterns:
+      - "Microsoft.*"
+      exclude-patterns:
+      - "Microsoft.NET.Test.Sdk"
+      update-types:
+      - patch
+
+    microsoft-packages-minor:
       patterns:
       - "Microsoft.*"
       exclude-patterns:
       - "Microsoft.NET.Test.Sdk"
       update-types:
       - minor
+
+    test-packages-patch:
+      patterns:
+      - "Microsoft.NET.Test.Sdk"
+      - "xunit*"
+      - "NUnit*"
+      - "coverlet*"
+      - "FluentAssertions"
+      update-types:
       - patch
 
-    test-packages:
+    test-packages-minor:
       patterns:
       - "Microsoft.NET.Test.Sdk"
       - "xunit*"
@@ -64,9 +109,21 @@ updates:
       - "FluentAssertions"
       update-types:
       - minor
+
+    all-other-non-major-patch:
+      patterns:
+      - "*"
+      exclude-patterns:
+      - "Microsoft.*"
+      - "Microsoft.NET.Test.Sdk"
+      - "xunit*"
+      - "NUnit*"
+      - "coverlet*"
+      - "FluentAssertions"
+      update-types:
       - patch
 
-    all-other-non-major:
+    all-other-non-major-minor:
       patterns:
       - "*"
       exclude-patterns:
@@ -78,7 +135,6 @@ updates:
       - "FluentAssertions"
       update-types:
       - minor
-      - patch
 
 - package-ecosystem: nuget
   directory: "/sample"
@@ -86,16 +142,33 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   groups:
-    microsoft-packages:
+    microsoft-packages-patch:
+      patterns:
+      - "Microsoft.*"
+      exclude-patterns:
+      - "Microsoft.NET.Test.Sdk"
+      update-types:
+      - patch
+
+    microsoft-packages-minor:
       patterns:
       - "Microsoft.*"
       exclude-patterns:
       - "Microsoft.NET.Test.Sdk"
       update-types:
       - minor
+
+    test-packages-patch:
+      patterns:
+      - "Microsoft.NET.Test.Sdk"
+      - "xunit*"
+      - "NUnit*"
+      - "coverlet*"
+      - "FluentAssertions"
+      update-types:
       - patch
 
-    test-packages:
+    test-packages-minor:
       patterns:
       - "Microsoft.NET.Test.Sdk"
       - "xunit*"
@@ -104,9 +177,21 @@ updates:
       - "FluentAssertions"
       update-types:
       - minor
+
+    all-other-non-major-patch:
+      patterns:
+      - "*"
+      exclude-patterns:
+      - "Microsoft.*"
+      - "Microsoft.NET.Test.Sdk"
+      - "xunit*"
+      - "NUnit*"
+      - "coverlet*"
+      - "FluentAssertions"
+      update-types:
       - patch
 
-    all-other-non-major:
+    all-other-non-major-minor:
       patterns:
       - "*"
       exclude-patterns:
@@ -118,4 +203,3 @@ updates:
       - "FluentAssertions"
       update-types:
       - minor
-      - patch
