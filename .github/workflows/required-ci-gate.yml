@@ -1,0 +1,39 @@
+name: Required CI Gate
+
+# No path filters: this check must exist on every PR, including documentation-only changes.
+on:
+  pull_request:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  required-ci-gate:
+    name: Required CI Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+      - name: Restore all three solutions (NuGet audit enabled)
+        run: |
+          dotnet restore Clean.Architecture.slnx --verbosity minimal
+          dotnet restore MinimalClean/MinimalClean.Architecture.slnx --verbosity minimal
+          dotnet restore sample/NimblePros.SampleToDo.slnx --verbosity minimal
+      - name: Build all three solutions
+        run: |
+          dotnet build Clean.Architecture.slnx -c Release --no-restore --verbosity minimal
+          dotnet build MinimalClean/MinimalClean.Architecture.slnx -c Release --no-restore --verbosity minimal
+          dotnet build sample/NimblePros.SampleToDo.slnx -c Release --no-restore --verbosity minimal
+      - name: Run unit tests (Microsoft Testing Platform)
+        run: |
+          dotnet test --project tests/Clean.Architecture.UnitTests/Clean.Architecture.UnitTests.csproj -c Release --no-build --minimum-expected-tests 1
+          dotnet test --project sample/tests/NimblePros.SampleToDo.UnitTests/NimblePros.SampleToDo.UnitTests.csproj -c Release --no-build --minimum-expected-tests 1
