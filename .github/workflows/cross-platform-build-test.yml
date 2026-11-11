@@ -108,15 +108,15 @@ jobs:
           retention-days: 30
 
   sample-tests:
-    name: Build & Test Sample (.NET 10)
+    name: Build & Test Sample (.NET 11)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      - name: Setup .NET 10 SDK
+      - name: Setup .NET 11 SDK
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '11.0.x'
           dotnet-quality: 'ga'
       # Run the sample test projects directly; the AspireHost is not required for these tests.
       - name: Run sample test projects
