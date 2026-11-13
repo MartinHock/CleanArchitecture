@@ -1,38 +1,28 @@
 version: 2
 updates:
+# One entry for all three solutions, each with its own Directory.Packages.props.
+# With `directories`, a grouped update that applies to several of them arrives as a
+# single PR, which keeps the template, MinimalClean and the sample on the same versions.
 - package-ecosystem: nuget
-  directory: "/"
+  directories:
+  - "/"
+  - "/MinimalClean"
+  - "/sample"
   schedule:
     interval: daily
   open-pull-requests-limit: 10
+  # Major updates are not grouped and still arrive separately for manual review.
   groups:
-    microsoft-packages-patch:
-      patterns:
-      - "Microsoft.*"
-      exclude-patterns:
-      - "Microsoft.NET.Test.Sdk"
-      update-types:
-      - patch
-
-    microsoft-packages-minor:
+    microsoft-packages:
       patterns:
       - "Microsoft.*"
       exclude-patterns:
       - "Microsoft.NET.Test.Sdk"
       update-types:
       - minor
-
-    test-packages-patch:
-      patterns:
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
       - patch
 
-    test-packages-minor:
+    test-packages:
       patterns:
       - "Microsoft.NET.Test.Sdk"
       - "xunit*"
@@ -41,21 +31,9 @@ updates:
       - "FluentAssertions"
       update-types:
       - minor
-
-    all-other-non-major-patch:
-      patterns:
-      - "*"
-      exclude-patterns:
-      - "Microsoft.*"
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
       - patch
 
-    all-other-non-major-minor:
+    all-other-non-major:
       patterns:
       - "*"
       exclude-patterns:
@@ -67,139 +45,4 @@ updates:
       - "FluentAssertions"
       update-types:
       - minor
-
-- package-ecosystem: nuget
-  directory: "/MinimalClean"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  groups:
-    microsoft-packages-patch:
-      patterns:
-      - "Microsoft.*"
-      exclude-patterns:
-      - "Microsoft.NET.Test.Sdk"
-      update-types:
       - patch
-
-    microsoft-packages-minor:
-      patterns:
-      - "Microsoft.*"
-      exclude-patterns:
-      - "Microsoft.NET.Test.Sdk"
-      update-types:
-      - minor
-
-    test-packages-patch:
-      patterns:
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
-      - patch
-
-    test-packages-minor:
-      patterns:
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
-      - minor
-
-    all-other-non-major-patch:
-      patterns:
-      - "*"
-      exclude-patterns:
-      - "Microsoft.*"
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
-      - patch
-
-    all-other-non-major-minor:
-      patterns:
-      - "*"
-      exclude-patterns:
-      - "Microsoft.*"
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
-      - minor
-
-- package-ecosystem: nuget
-  directory: "/sample"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  groups:
-    microsoft-packages-patch:
-      patterns:
-      - "Microsoft.*"
-      exclude-patterns:
-      - "Microsoft.NET.Test.Sdk"
-      update-types:
-      - patch
-
-    microsoft-packages-minor:
-      patterns:
-      - "Microsoft.*"
-      exclude-patterns:
-      - "Microsoft.NET.Test.Sdk"
-      update-types:
-      - minor
-
-    test-packages-patch:
-      patterns:
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
-      - patch
-
-    test-packages-minor:
-      patterns:
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
-      - minor
-
-    all-other-non-major-patch:
-      patterns:
-      - "*"
-      exclude-patterns:
-      - "Microsoft.*"
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
-      - patch
-
-    all-other-non-major-minor:
-      patterns:
-      - "*"
-      exclude-patterns:
-      - "Microsoft.*"
-      - "Microsoft.NET.Test.Sdk"
-      - "xunit*"
-      - "NUnit*"
-      - "coverlet*"
-      - "FluentAssertions"
-      update-types:
-      - minor
