@@ -21,7 +21,7 @@ public static class MiddlewareConfig
 
     app.UseFastEndpoints();
 
-    if (app.Environment.IsDevelopment())
+    if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
     {
       app.UseSwaggerGen(options =>
       {
