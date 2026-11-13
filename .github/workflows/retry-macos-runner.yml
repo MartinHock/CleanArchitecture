@@ -1,0 +1,92 @@
+name: Retry macOS runner allocation failures
+
+# This workflow runs from the default branch after merge. It retries only jobs
+# which GitHub could not assign to a hosted runner; test failures remain failures.
+on:
+  workflow_run:
+    workflows:
+      - Cross-Platform Build & Test (Clean Architecture)
+      - Cross-Platform Build & Test (MinimalClean)
+    types: [completed]
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  checks: read
+  pull-requests: read
+
+concurrency:
+  group: retry-macos-runner-capacity
+  cancel-in-progress: false
+
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retry runner-allocation failures (at most twice)
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const workflows = new Set([
+              'Cross-Platform Build & Test (Clean Architecture)',
+              'Cross-Platform Build & Test (MinimalClean)',
+            ]);
+            const maxAttempts = 3; // original attempt + at most two retries
+            const { data: prs } = await github.rest.pulls.list({
+              owner, repo, state: 'open', per_page: 100,
+            });
+            const openHeads = new Set(prs.map(pr => pr.head.sha));
+            let runs;
+            if (context.eventName === 'workflow_run') {
+              runs = [context.payload.workflow_run];
+            } else {
+              const result = await github.rest.actions.listWorkflowRunsForRepo({
+                owner, repo, status: 'completed', per_page: 100,
+              });
+              runs = result.data.workflow_runs;
+            }
+            for (const run of runs) {
+              if (!workflows.has(run.name) ||
+                  run.event !== 'pull_request' ||
+                  run.status !== 'completed' ||
+                  run.conclusion !== 'failure' ||
+                  run.run_attempt >= maxAttempts ||
+                  !openHeads.has(run.head_sha)) continue;
+
+              const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+                owner, repo, run_id: run.id, per_page: 100,
+                filter: 'latest',
+              });
+              const failed = jobs.jobs.filter(job =>
+                job.name.includes('macos-latest') &&
+                job.conclusion === 'cancelled' &&
+                !job.runner_name &&
+                (!job.steps || job.steps.length === 0));
+              const otherFailures = jobs.jobs.filter(job =>
+                ['failure', 'timed_out', 'cancelled', 'action_required'].includes(job.conclusion) &&
+                !failed.some(f => f.id === job.id));
+              if (failed.length === 0 || otherFailures.length > 0) continue;
+
+              // The empty runner/steps combination is necessary but not sufficient:
+              // require GitHub's explicit runner-acquisition failure annotation.
+              let confirmed = true;
+              for (const job of failed) {
+                const { data: annotations } = await github.rest.checks.listAnnotations({
+                  owner, repo, check_run_id: job.id, per_page: 100,
+                });
+                if (!annotations.some(a =>
+                    /job was not acquired by Runner/i.test(a.message || ''))) {
+                  confirmed = false;
+                  break;
+                }
+              }
+              if (!confirmed) continue;
+              core.notice(`Retrying macOS allocation failure in run ${run.id}, attempt ${run.run_attempt}`);
+              await github.rest.actions.reRunFailedJobsForWorkflowRun({
+                owner, repo, run_id: run.id,
+              });
+            }
