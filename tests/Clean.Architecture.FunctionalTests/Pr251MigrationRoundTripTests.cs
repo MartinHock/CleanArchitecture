@@ -9,6 +9,7 @@ public sealed class Pr251MigrationRoundTripTests
   [Fact]
   public async Task SqlServer_Up_Down_PreservesDataAndIdentity()
   {
+    if (!OperatingSystem.IsLinux()) Assert.Skip("SQL Server Testcontainers requires a Linux Docker runner.");
     var ct = TestContext.Current.CancellationToken;
     await using var container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest")
       .WithPassword("Your_password123!").Build();
