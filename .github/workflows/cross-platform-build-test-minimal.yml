@@ -11,10 +11,6 @@ on:
   pull_request:
     branches:
       - '**'
-    paths:
-      - 'MinimalClean/**'
-      - '.github/dependabot.yml'
-      - '.github/workflows/cross-platform-build-test-minimal.yml'
   workflow_dispatch:
 
 jobs:
