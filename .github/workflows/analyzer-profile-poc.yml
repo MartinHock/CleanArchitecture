@@ -1,0 +1,28 @@
+﻿name: Analyzer Profile PoC
+on:
+  push:
+    branches: ['poc/analyzer-profile-resolution']
+    paths: ['analyzer-profiles/**', 'Directory.Build.targets', '.github/workflows/analyzer-profile-poc.yml']
+  pull_request:
+    paths: ['analyzer-profiles/**', 'Directory.Build.targets', '.github/workflows/analyzer-profile-poc.yml']
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '11.0.x'
+      - name: Verify matrix and overrides
+        run: dotnet run --project analyzer-profiles/Generator/Generator.csproj -- verify analyzer-profiles/matrix.json
+      - name: Restore
+        run: dotnet restore src/Clean.Architecture.Core/Clean.Architecture.Core.csproj
+      - name: Default profile build
+        run: dotnet build src/Clean.Architecture.Core/Clean.Architecture.Core.csproj --no-restore -p:AnalyzerProfile=Default
+      - name: Strict profile build
+        run: dotnet build src/Clean.Architecture.Core/Clean.Architecture.Core.csproj --no-restore -p:AnalyzerProfile=Strict
