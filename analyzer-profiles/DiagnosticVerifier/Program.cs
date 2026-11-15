@@ -77,7 +77,7 @@ var candidateStart = new ProcessStartInfo("dotnet")
     UseShellExecute = false,
     WorkingDirectory = root
 };
-foreach (var arg in new[] { "build", candidateFixture, "--no-restore", "-t:Rebuild", "-p:TreatWarningsAsErrors=false", "-v:minimal" })
+foreach (var arg in new[] { "build", candidateFixture, "-t:Rebuild", "-p:TreatWarningsAsErrors=false", "-v:minimal" })
     candidateStart.ArgumentList.Add(arg);
 using (var candidateProcess = Process.Start(candidateStart) ?? throw new InvalidOperationException("Could not start candidate build"))
 {
