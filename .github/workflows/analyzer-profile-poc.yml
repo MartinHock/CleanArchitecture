@@ -26,3 +26,8 @@ jobs:
         run: dotnet build src/Clean.Architecture.Core/Clean.Architecture.Core.csproj --no-restore -p:AnalyzerProfile=Default
       - name: Strict profile build
         run: dotnet build src/Clean.Architecture.Core/Clean.Architecture.Core.csproj --no-restore -p:AnalyzerProfile=Strict
+
+      - name: Restore diagnostic fixture
+        run: dotnet restore analyzer-profiles/Fixture/Fixture.csproj
+      - name: Verify actual Roslyn diagnostics (clean rebuild)
+        run: dotnet run --project analyzer-profiles/DiagnosticVerifier/DiagnosticVerifier.csproj
