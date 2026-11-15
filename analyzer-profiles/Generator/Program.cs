@@ -32,7 +32,9 @@ try
         output.Append("dotnet_diagnostic.").Append(rule.Key).Append(".severity = ").Append(rule.Value).Append('\n');
     var path = Path.GetFullPath(args[3]);
     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-    File.WriteAllText(path, output.ToString(), new UTF8Encoding(false));
+    var content = output.ToString();
+    if (!File.Exists(path) || !string.Equals(File.ReadAllText(path), content, StringComparison.Ordinal))
+        File.WriteAllText(path, content, new UTF8Encoding(false));
     Console.WriteLine($"Generated {path} for {args[2]}");
     return 0;
 }
