@@ -42,8 +42,8 @@ public sealed class GeneratorTests
     public async Task GivenAValidProfile_WhenGenerating_ThenWritesExactlyTheExpectedConfiguration(string profile, string[] severities)
     {
         // Arrange
-        using var temp = new Temp();
-        var output = Path.Combine(temp.Directory, "nested", OutputName);
+        using var testDirectory = new TemporaryTestDirectory();
+        var output = Path.Combine(testDirectory.Path, "nested", OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, Matrix, profile, output);
@@ -58,12 +58,12 @@ public sealed class GeneratorTests
     public async Task GivenRuleAndCategoryOverrides_WhenGenerating_ThenRuleOverrideWins()
     {
         // Arrange
-        using var temp = new Temp();
+        using var testDirectory = new TemporaryTestDirectory();
         var node = ReadMatrix();
         node["categoryOverrides"]![DesignCategory] = "error";
         node["ruleOverrides"]![DesignRule] = "none";
-        var input = WriteMatrix(temp, node);
-        var output = Path.Combine(temp.Directory, OutputName);
+        var input = WriteMatrix(testDirectory, node);
+        var output = Path.Combine(testDirectory.Path, OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, input, DefaultProfile, output);
@@ -77,11 +77,11 @@ public sealed class GeneratorTests
     public async Task GivenCategoryOverride_WhenGenerating_ThenCategoryOverrideWinsOverProfile()
     {
         // Arrange
-        using var temp = new Temp();
+        using var testDirectory = new TemporaryTestDirectory();
         var node = ReadMatrix();
         node["categoryOverrides"]![DesignCategory] = "error";
-        var input = WriteMatrix(temp, node);
-        var output = Path.Combine(temp.Directory, OutputName);
+        var input = WriteMatrix(testDirectory, node);
+        var output = Path.Combine(testDirectory.Path, OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, input, DefaultProfile, output);
@@ -94,7 +94,7 @@ public sealed class GeneratorTests
     [Fact]
     public async Task GivenReorderedRules_WhenGenerating_ThenOutputIsByteIdentical()
     {
-        using var temp = new Temp();
+        using var testDirectory = new TemporaryTestDirectory();
         var original = ReadMatrix();
         var reordered = ReadMatrix();
         var rules = reordered["rules"]!.AsObject();
@@ -102,10 +102,10 @@ public sealed class GeneratorTests
         rules.Clear();
         foreach (var entry in pairs.Reverse())
             rules[entry.Key] = entry.Value?.DeepClone();
-        var firstInput = WriteMatrix(temp, original, "first.json");
-        var secondInput = WriteMatrix(temp, reordered, "second.json");
-        var firstOutput = Path.Combine(temp.Directory, "first.globalconfig");
-        var secondOutput = Path.Combine(temp.Directory, "second.globalconfig");
+        var firstInput = WriteMatrix(testDirectory, original, "first.json");
+        var secondInput = WriteMatrix(testDirectory, reordered, "second.json");
+        var firstOutput = Path.Combine(testDirectory.Path, "first.globalconfig");
+        var secondOutput = Path.Combine(testDirectory.Path, "second.globalconfig");
 
         // Act
         var firstResult = await Run(GeneratorCommand, firstInput, StrictProfile, firstOutput);
@@ -123,9 +123,9 @@ public sealed class GeneratorTests
     public async Task GivenUnknownProfile_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
         // Arrange
-        using var temp = new Temp();
+        using var testDirectory = new TemporaryTestDirectory();
         var matrixPath = Matrix;
-        var output = Path.Combine(temp.Directory, OutputName);
+        var output = Path.Combine(testDirectory.Path, OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, matrixPath, UnknownProfile, output);
@@ -140,11 +140,11 @@ public sealed class GeneratorTests
     public async Task GivenUnknownCategory_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
         // Arrange
-        using var temp = new Temp();
+        using var testDirectory = new TemporaryTestDirectory();
         var node = ReadMatrix();
         node["rules"]![DesignRule] = "MissingCategory";
-        var matrixPath = WriteMatrix(temp, node);
-        var output = Path.Combine(temp.Directory, OutputName);
+        var matrixPath = WriteMatrix(testDirectory, node);
+        var output = Path.Combine(testDirectory.Path, OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
@@ -159,11 +159,11 @@ public sealed class GeneratorTests
     public async Task GivenInvalidSeverity_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
         // Arrange
-        using var temp = new Temp();
+        using var testDirectory = new TemporaryTestDirectory();
         var node = ReadMatrix();
         node["profiles"]![DefaultProfile]![DesignCategory] = InvalidSeverity;
-        var matrixPath = WriteMatrix(temp, node);
-        var output = Path.Combine(temp.Directory, OutputName);
+        var matrixPath = WriteMatrix(testDirectory, node);
+        var output = Path.Combine(testDirectory.Path, OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
@@ -178,11 +178,11 @@ public sealed class GeneratorTests
     public async Task GivenMalformedJson_WhenGenerating_ThenReportsParseErrorWithoutCreatingOutput()
     {
         // Arrange
-        using var temp = new Temp();
-        var input = Path.Combine(temp.Directory, MatrixName);
+        using var testDirectory = new TemporaryTestDirectory();
+        var input = Path.Combine(testDirectory.Path, MatrixName);
         File.WriteAllText(input, "not json");
         var matrixPath = input;
-        var output = Path.Combine(temp.Directory, OutputName);
+        var output = Path.Combine(testDirectory.Path, OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
@@ -197,11 +197,11 @@ public sealed class GeneratorTests
     public async Task GivenMissingRequiredMatrixProperty_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
         // Arrange
-        using var temp = new Temp();
+        using var testDirectory = new TemporaryTestDirectory();
         var node = ReadMatrix();
         node.AsObject().Remove("rules");
-        var matrixPath = WriteMatrix(temp, node);
-        var output = Path.Combine(temp.Directory, OutputName);
+        var matrixPath = WriteMatrix(testDirectory, node);
+        var output = Path.Combine(testDirectory.Path, OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
@@ -216,9 +216,9 @@ public sealed class GeneratorTests
     public async Task GivenMissingMatrixFile_WhenGenerating_ThenReportsFileErrorWithoutCreatingOutput()
     {
         // Arrange
-        using var temp = new Temp();
-        var matrixPath = Path.Combine(temp.Directory, "missing.json");
-        var output = Path.Combine(temp.Directory, OutputName);
+        using var testDirectory = new TemporaryTestDirectory();
+        var matrixPath = Path.Combine(testDirectory.Path, "missing.json");
+        var output = Path.Combine(testDirectory.Path, OutputName);
 
         // Act
         var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
@@ -264,9 +264,9 @@ public sealed class GeneratorTests
 
     private static JsonNode ReadMatrix() => JsonNode.Parse(File.ReadAllText(Matrix))!;
 
-    private static string WriteMatrix(Temp temp, JsonNode node, string name = MatrixName)
+    private static string WriteMatrix(TemporaryTestDirectory testDirectory, JsonNode node, string name = MatrixName)
     {
-        var path = Path.Combine(temp.Directory, name);
+        var path = Path.Combine(testDirectory.Path, name);
         File.WriteAllText(path, node.ToJsonString());
         return path;
     }
@@ -291,10 +291,10 @@ public sealed class GeneratorTests
         return (process.ExitCode, await stdout, await stderr);
     }
 
-    private sealed class Temp : IDisposable
+    private sealed class TemporaryTestDirectory : IDisposable
     {
-        public string Directory { get; } = Path.Combine(Path.GetTempPath(), "analyzer-generator-tests", Guid.NewGuid().ToString("N"));
-        public Temp() => System.IO.Directory.CreateDirectory(Directory);
-        public void Dispose() => System.IO.Directory.Delete(Directory, recursive: true);
+        public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "analyzer-generator-tests", Guid.NewGuid().ToString("N"));
+        public TemporaryTestDirectory() => System.IO.Directory.CreateDirectory(Path);
+        public void Dispose() => System.IO.Directory.Delete(Path, recursive: true);
     }
 }
