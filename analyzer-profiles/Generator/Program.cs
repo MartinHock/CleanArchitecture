@@ -36,7 +36,7 @@ try
     Console.WriteLine($"Generated {path} for {args[2]}");
     return 0;
 }
-catch (Exception ex) when (ex is ArgumentException or IOException or JsonException or IndexOutOfRangeException or InvalidOperationException)
+catch (Exception ex) when (ex is ArgumentException or IOException or JsonException or KeyNotFoundException or IndexOutOfRangeException or InvalidOperationException)
 {
     Console.Error.WriteLine(ex.Message);
     return 1;
