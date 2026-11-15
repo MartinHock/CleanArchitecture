@@ -120,6 +120,25 @@ public sealed class GeneratorTests
     }
 
     [Fact]
+    public async Task GivenUnchangedProfile_WhenGeneratingAgain_ThenPreservesOutputTimestamp()
+    {
+        // Arrange
+        using var testDirectory = new TemporaryTestDirectory();
+        var output = Path.Combine(testDirectory.Path, OutputName);
+        var firstResult = await Run(GeneratorCommand, Matrix, DefaultProfile, output);
+        var originalTimestamp = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        File.SetLastWriteTimeUtc(output, originalTimestamp);
+
+        // Act
+        var secondResult = await Run(GeneratorCommand, Matrix, DefaultProfile, output);
+
+        // Assert
+        firstResult.Code.ShouldBe(SuccessExitCode, firstResult.Error);
+        secondResult.Code.ShouldBe(SuccessExitCode, secondResult.Error);
+        File.GetLastWriteTimeUtc(output).ShouldBe(originalTimestamp);
+    }
+
+    [Fact]
     public async Task GivenUnknownProfile_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
         // Arrange
