@@ -1,0 +1,18 @@
+﻿{
+  "profiles": {
+    "Default": { "Design": "suggestion", "Performance": "suggestion", "Security": "warning", "Reliability": "warning", "Maintainability": "suggestion", "Style": "silent" },
+    "Strict": { "Design": "warning", "Performance": "warning", "Security": "error", "Reliability": "error", "Maintainability": "warning", "Style": "suggestion" },
+    "Regulated": { "Design": "warning", "Performance": "warning", "Security": "error", "Reliability": "error", "Maintainability": "error", "Style": "warning" },
+    "AllEnabled": { "Design": "warning", "Performance": "warning", "Security": "warning", "Reliability": "warning", "Maintainability": "warning", "Style": "warning" }
+  },
+  "rules": {
+    "CA1062": "Design",
+    "CA1822": "Performance",
+    "CA2100": "Security",
+    "CA2000": "Reliability",
+    "CA1502": "Maintainability",
+    "IDE0005": "Style"
+  },
+  "categoryOverrides": {},
+  "ruleOverrides": {}
+}
