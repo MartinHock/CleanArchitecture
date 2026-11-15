@@ -41,38 +41,54 @@ public sealed class GeneratorTests
     [MemberData(nameof(Profiles))]
     public async Task GivenAValidProfile_WhenGenerating_ThenWritesExactlyTheExpectedConfiguration(string profile, string[] severities)
     {
-        // Given
+        // Arrange
         using var temp = new Temp();
         var output = Path.Combine(temp.Directory, "nested", OutputName);
 
-        // When
+        // Act
         var result = await Run(GeneratorCommand, Matrix, profile, output);
 
-        // Then
-        result.Code.ShouldBe(SuccessExitCode, result.Error);
+        // Assert
         var expected = Header + string.Concat(RuleIds.Zip(severities, (id, severity) => $"dotnet_diagnostic.{id}.severity = {severity}\n"));
+        result.Code.ShouldBe(SuccessExitCode, result.Error);
         File.ReadAllText(output).ShouldBe(expected);
     }
 
     [Fact]
     public async Task GivenRuleAndCategoryOverrides_WhenGenerating_ThenRuleOverrideWins()
     {
+        // Arrange
         using var temp = new Temp();
         var node = ReadMatrix();
         node["categoryOverrides"]![DesignCategory] = "error";
         node["ruleOverrides"]![DesignRule] = "none";
-        var output = await GenerateModifiedMatrix(temp, node);
-        output.ShouldContain($"dotnet_diagnostic.{DesignRule}.severity = none\n");
+        var input = WriteMatrix(temp, node);
+        var output = Path.Combine(temp.Directory, OutputName);
+
+        // Act
+        var result = await Run(GeneratorCommand, input, DefaultProfile, output);
+
+        // Assert
+        result.Code.ShouldBe(SuccessExitCode, result.Error);
+        File.ReadAllText(output).ShouldContain($"dotnet_diagnostic.{DesignRule}.severity = none\n");
     }
 
     [Fact]
     public async Task GivenCategoryOverride_WhenGenerating_ThenCategoryOverrideWinsOverProfile()
     {
+        // Arrange
         using var temp = new Temp();
         var node = ReadMatrix();
         node["categoryOverrides"]![DesignCategory] = "error";
-        var output = await GenerateModifiedMatrix(temp, node);
-        output.ShouldContain($"dotnet_diagnostic.{DesignRule}.severity = error\n");
+        var input = WriteMatrix(temp, node);
+        var output = Path.Combine(temp.Directory, OutputName);
+
+        // Act
+        var result = await Run(GeneratorCommand, input, DefaultProfile, output);
+
+        // Assert
+        result.Code.ShouldBe(SuccessExitCode, result.Error);
+        File.ReadAllText(output).ShouldContain($"dotnet_diagnostic.{DesignRule}.severity = error\n");
     }
 
     [Fact]
@@ -86,60 +102,131 @@ public sealed class GeneratorTests
         rules.Clear();
         foreach (var entry in pairs.Reverse())
             rules[entry.Key] = entry.Value?.DeepClone();
-        var first = await GenerateModifiedMatrixBytes(temp, original, "first");
-        var second = await GenerateModifiedMatrixBytes(temp, reordered, "second");
-        first.ShouldBe(second);
+        var firstInput = WriteMatrix(temp, original, "first.json");
+        var secondInput = WriteMatrix(temp, reordered, "second.json");
+        var firstOutput = Path.Combine(temp.Directory, "first.globalconfig");
+        var secondOutput = Path.Combine(temp.Directory, "second.globalconfig");
+
+        // Act
+        var firstResult = await Run(GeneratorCommand, firstInput, StrictProfile, firstOutput);
+        var secondResult = await Run(GeneratorCommand, secondInput, StrictProfile, secondOutput);
+
+        // Assert
+        firstResult.Code.ShouldBe(SuccessExitCode, firstResult.Error);
+        secondResult.Code.ShouldBe(SuccessExitCode, secondResult.Error);
+        var first = File.ReadAllBytes(firstOutput);
+        first.ShouldBe(File.ReadAllBytes(secondOutput));
         first.AsSpan().StartsWith(Encoding.UTF8.GetPreamble()).ShouldBeFalse();
     }
 
     [Fact]
     public async Task GivenUnknownProfile_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
+        // Arrange
         using var temp = new Temp();
-        await AssertConfigurationFailure(temp, Matrix, UnknownProfile, "Unknown profile");
+        var matrixPath = Matrix;
+        var output = Path.Combine(temp.Directory, OutputName);
+
+        // Act
+        var result = await Run(GeneratorCommand, matrixPath, UnknownProfile, output);
+
+        // Assert
+        result.Code.ShouldBe(ConfigurationErrorExitCode, result.Error);
+        result.Error.ShouldContain("Unknown profile", Case.Insensitive);
+        File.Exists(output).ShouldBeFalse();
     }
 
     [Fact]
     public async Task GivenUnknownCategory_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
+        // Arrange
         using var temp = new Temp();
         var node = ReadMatrix();
         node["rules"]![DesignRule] = "MissingCategory";
-        await AssertConfigurationFailure(temp, WriteMatrix(temp, node), DefaultProfile, "Unknown category");
+        var matrixPath = WriteMatrix(temp, node);
+        var output = Path.Combine(temp.Directory, OutputName);
+
+        // Act
+        var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
+
+        // Assert
+        result.Code.ShouldBe(ConfigurationErrorExitCode, result.Error);
+        result.Error.ShouldContain("Unknown category", Case.Insensitive);
+        File.Exists(output).ShouldBeFalse();
     }
 
     [Fact]
     public async Task GivenInvalidSeverity_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
+        // Arrange
         using var temp = new Temp();
         var node = ReadMatrix();
         node["profiles"]![DefaultProfile]![DesignCategory] = InvalidSeverity;
-        await AssertConfigurationFailure(temp, WriteMatrix(temp, node), DefaultProfile, "Invalid severity");
+        var matrixPath = WriteMatrix(temp, node);
+        var output = Path.Combine(temp.Directory, OutputName);
+
+        // Act
+        var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
+
+        // Assert
+        result.Code.ShouldBe(ConfigurationErrorExitCode, result.Error);
+        result.Error.ShouldContain("Invalid severity", Case.Insensitive);
+        File.Exists(output).ShouldBeFalse();
     }
 
     [Fact]
     public async Task GivenMalformedJson_WhenGenerating_ThenReportsParseErrorWithoutCreatingOutput()
     {
+        // Arrange
         using var temp = new Temp();
         var input = Path.Combine(temp.Directory, MatrixName);
         File.WriteAllText(input, "not json");
-        await AssertConfigurationFailure(temp, input, DefaultProfile, "invalid");
+        var matrixPath = input;
+        var output = Path.Combine(temp.Directory, OutputName);
+
+        // Act
+        var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
+
+        // Assert
+        result.Code.ShouldBe(ConfigurationErrorExitCode, result.Error);
+        result.Error.ShouldContain("invalid", Case.Insensitive);
+        File.Exists(output).ShouldBeFalse();
     }
 
     [Fact]
     public async Task GivenMissingRequiredMatrixProperty_WhenGenerating_ThenReportsConfigurationErrorWithoutCreatingOutput()
     {
+        // Arrange
         using var temp = new Temp();
         var node = ReadMatrix();
         node.AsObject().Remove("rules");
-        await AssertConfigurationFailure(temp, WriteMatrix(temp, node), DefaultProfile, "rules");
+        var matrixPath = WriteMatrix(temp, node);
+        var output = Path.Combine(temp.Directory, OutputName);
+
+        // Act
+        var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
+
+        // Assert
+        result.Code.ShouldBe(ConfigurationErrorExitCode, result.Error);
+        result.Error.ShouldContain("rules", Case.Insensitive);
+        File.Exists(output).ShouldBeFalse();
     }
 
     [Fact]
     public async Task GivenMissingMatrixFile_WhenGenerating_ThenReportsFileErrorWithoutCreatingOutput()
     {
+        // Arrange
         using var temp = new Temp();
-        await AssertConfigurationFailure(temp, Path.Combine(temp.Directory, "missing.json"), DefaultProfile, "Could not find");
+        var matrixPath = Path.Combine(temp.Directory, "missing.json");
+        var output = Path.Combine(temp.Directory, OutputName);
+
+        // Act
+        var result = await Run(GeneratorCommand, matrixPath, DefaultProfile, output);
+
+        // Assert
+        result.Code.ShouldBe(ConfigurationErrorExitCode, result.Error);
+        result.Error.ShouldContain("Could not find", Case.Insensitive);
+        File.Exists(output).ShouldBeFalse();
     }
 
     [Theory]
@@ -150,7 +237,13 @@ public sealed class GeneratorTests
     [InlineData("unsupported|matrix.json")]
     public async Task GivenInvalidArguments_WhenInvokingCli_ThenReportsUsageError(string arguments)
     {
-        var result = await Run(arguments.Length == 0 ? [] : arguments.Split('|'));
+        // Arrange
+        var args = arguments.Length == 0 ? [] : arguments.Split('|');
+
+        // Act
+        var result = await Run(args);
+
+        // Assert
         result.Code.ShouldBe(UsageErrorExitCode);
         result.Error.ShouldContain("Usage:");
     }
@@ -158,7 +251,13 @@ public sealed class GeneratorTests
     [Fact]
     public async Task GivenValidRepositoryMatrix_WhenVerifying_ThenReportsSuccess()
     {
-        var result = await Run(VerifyCommand, Matrix);
+        // Arrange
+        var matrixPath = Matrix;
+
+        // Act
+        var result = await Run(VerifyCommand, matrixPath);
+
+        // Assert
         result.Code.ShouldBe(SuccessExitCode, result.Error);
         result.Output.ShouldContain("PASS:");
     }
@@ -170,33 +269,6 @@ public sealed class GeneratorTests
         var path = Path.Combine(temp.Directory, name);
         File.WriteAllText(path, node.ToJsonString());
         return path;
-    }
-
-    private static async Task<string> GenerateModifiedMatrix(Temp temp, JsonNode node)
-    {
-        var input = WriteMatrix(temp, node);
-        var output = Path.Combine(temp.Directory, OutputName);
-        var result = await Run(GeneratorCommand, input, DefaultProfile, output);
-        result.Code.ShouldBe(SuccessExitCode, result.Error);
-        return File.ReadAllText(output);
-    }
-
-    private static async Task<byte[]> GenerateModifiedMatrixBytes(Temp temp, JsonNode node, string name)
-    {
-        var input = WriteMatrix(temp, node, name + ".json");
-        var output = Path.Combine(temp.Directory, name + ".globalconfig");
-        var result = await Run(GeneratorCommand, input, StrictProfile, output);
-        result.Code.ShouldBe(SuccessExitCode, result.Error);
-        return File.ReadAllBytes(output);
-    }
-
-    private static async Task AssertConfigurationFailure(Temp temp, string input, string profile, string expectedMessage)
-    {
-        var output = Path.Combine(temp.Directory, OutputName);
-        var result = await Run(GeneratorCommand, input, profile, output);
-        result.Code.ShouldBe(ConfigurationErrorExitCode, result.Error);
-        result.Error.ShouldContain(expectedMessage, Case.Insensitive);
-        File.Exists(output).ShouldBeFalse();
     }
 
     private static async Task<(int Code, string Output, string Error)> Run(params string[] args)
