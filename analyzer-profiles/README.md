@@ -29,3 +29,7 @@ The verifier clean-rebuilds the fixture for all four profiles, checks actual Ros
 
 The verifier also checks CA1502 against actual Roslyn diagnostics (`Strict=warning`, `Regulated=error`) and confirms that a fixture-local `.editorconfig` override can suppress CA1822 while the generated Strict profile still reports CA2000 as an error. The temporary `.editorconfig` is removed after verification.
 The six rule IDs are PoC examples, not production coverage. The generated globalconfig is passed to Roslyn through `EditorConfigFiles`.
+
+## Incremental build integration
+
+The MSBuild target uses matrix.json and the generator source/project as inputs and a profile-specific .globalconfig as output. Repeated builds with unchanged inputs skip the generator. Profile-specific output paths keep Strict and Regulated configurations independent. Changes to matrix or generator inputs invalidate the corresponding output. The generator itself also preserves unchanged file content.
