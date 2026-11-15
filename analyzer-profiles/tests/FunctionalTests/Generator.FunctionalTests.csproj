@@ -11,6 +11,6 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <ProjectReference Include="../Generator/Generator.csproj" />
+    <ProjectReference Include="../../Generator/Generator.csproj" />
   </ItemGroup>
 </Project>

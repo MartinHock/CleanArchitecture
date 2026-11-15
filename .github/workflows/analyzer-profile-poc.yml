@@ -19,7 +19,7 @@ jobs:
         with:
           dotnet-version: '11.0.x'
       - name: Generator regression tests (xUnit v3 / MTP / Shouldly)
-        run: dotnet run --project analyzer-profiles/Generator.Tests/Generator.Tests.csproj -- --progress off
+        run: dotnet run --project analyzer-profiles/tests/FunctionalTests/Generator.FunctionalTests.csproj -- --progress off
       - name: Verify matrix and overrides
         run: dotnet run --project analyzer-profiles/Generator/Generator.csproj -- verify analyzer-profiles/matrix.json
       - name: Restore
