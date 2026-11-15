@@ -1,4 +1,4 @@
-﻿# Analyzer profile PoC
+# Analyzer profile PoC
 
 Opt-in build: `dotnet build src/Clean.Architecture.Core/Clean.Architecture.Core.csproj -p:AnalyzerProfile=Strict`.
 The profile is resolved from `matrix.json` into an intermediate `.globalconfig`.
@@ -20,4 +20,3 @@ must be validated against the full repository configuration before rollout.
 `dotnet run --project analyzer-profiles/DiagnosticVerifier/DiagnosticVerifier.csproj`
 rebuilds it separately with `Default` and `Strict`, checks the actual compiler output,
 and fails if CA1822 is absent. The fixture checks that `Default` (`suggestion`) does not emit a build warning for CA1822, while `Strict` emits `warning CA1822`. Both builds are clean rebuilds. The generated globalconfig is supplied to the compiler through `EditorConfigFiles`; `GlobalAnalyzerConfigFiles` alone was not passed to csc in the tested SDK. The fixture is isolated from the production project.
-

@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup Condition="'$(AnalyzerProfile)' != ''">
     <_AnalyzerProfileConfig>$(IntermediateOutputPath)analyzer-profile.globalconfig</_AnalyzerProfileConfig>
   </PropertyGroup>
@@ -9,4 +9,3 @@
     <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)analyzer-profiles/Generator/Generator.csproj&quot; -- generate &quot;$(MSBuildThisFileDirectory)analyzer-profiles/matrix.json&quot; &quot;$(AnalyzerProfile)&quot; &quot;$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_AnalyzerProfileConfig)'))&quot;" />
   </Target>
 </Project>
-
