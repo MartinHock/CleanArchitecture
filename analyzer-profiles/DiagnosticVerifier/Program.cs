@@ -1,13 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
 var fixture = Path.Combine(root, "analyzer-profiles", "Fixture", "Fixture.csproj");
 var cases = new[]
 {
-    (Profile: "Default", Ca1822: "none", Ca2000: "warning", ExitCode: 0),
-    (Profile: "Strict", Ca1822: "warning", Ca2000: "error", ExitCode: 1),
-    (Profile: "Regulated", Ca1822: "warning", Ca2000: "error", ExitCode: 1),
-    (Profile: "AllEnabled", Ca1822: "warning", Ca2000: "warning", ExitCode: 0)
+    (Profile: "Default", Ca1822: "none", Ca2000: "warning", Ca1062: "none", ExitCode: 0),
+    (Profile: "Strict", Ca1822: "warning", Ca2000: "error", Ca1062: "warning", ExitCode: 1),
+    (Profile: "Regulated", Ca1822: "warning", Ca2000: "error", Ca1062: "warning", ExitCode: 1),
+    (Profile: "AllEnabled", Ca1822: "warning", Ca2000: "warning", Ca1062: "warning", ExitCode: 0)
 };
 var failures = 0;
 foreach (var test in cases)
@@ -26,14 +26,14 @@ foreach (var test in cases)
     var errorTask = process.StandardError.ReadToEndAsync();
     await process.WaitForExitAsync();
     var output = await outputTask + await errorTask;
-    var valid = process.ExitCode == test.ExitCode && Matches(output, "CA1822", test.Ca1822) && Matches(output, "CA2000", test.Ca2000);
+    var valid = process.ExitCode == test.ExitCode && Matches(output, "CA1822", test.Ca1822) && Matches(output, "CA2000", test.Ca2000) && Matches(output, "CA1062", test.Ca1062);
     if (!valid)
     {
-        Console.Error.WriteLine($"FAIL {test.Profile}: expected CA1822={test.Ca1822}, CA2000={test.Ca2000}, exit={test.ExitCode}; actual exit={process.ExitCode}.\n{output}");
+        Console.Error.WriteLine($"FAIL {test.Profile}: expected CA1822={test.Ca1822}, CA2000={test.Ca2000}, CA1062={test.Ca1062}, exit={test.ExitCode}; actual exit={process.ExitCode}.\n{output}");
         failures++;
     }
     else
-        Console.WriteLine($"PASS {test.Profile}: CA1822={test.Ca1822}, CA2000={test.Ca2000}, exit={test.ExitCode}");
+        Console.WriteLine($"PASS {test.Profile}: CA1822={test.Ca1822}, CA2000={test.Ca2000}, CA1062={test.Ca1062}, exit={test.ExitCode}");
 }
 return failures == 0 ? 0 : 1;
 
