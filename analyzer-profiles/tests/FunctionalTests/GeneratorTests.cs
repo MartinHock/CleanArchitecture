@@ -27,14 +27,14 @@ public sealed class GeneratorTests
     private static readonly string Root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
     private static readonly string Matrix = Path.Combine(Root, MatrixName);
     private static readonly string Generator = Path.Combine(AppContext.BaseDirectory, "Generator.dll");
-    private static readonly string[] RuleIds = ["CA1062", "CA1502", "CA1822", "CA2000", "CA2100", "IDE0005"];
+    private static readonly string[] RuleIds = ["CA1050", "CA1062", "CA1502", "CA1508", "CA1822", "CA2000", "CA2100", "CA2208", "IDE0005"];
 
     public static TheoryData<string, string[]> Profiles => new()
     {
-        { DefaultProfile, ["suggestion", "suggestion", "suggestion", "warning", "warning", "silent"] },
-        { StrictProfile, ["warning", "warning", "warning", "error", "error", "suggestion"] },
-        { RegulatedProfile, ["warning", "error", "warning", "error", "error", "warning"] },
-        { AllEnabledProfile, ["warning", "warning", "warning", "warning", "warning", "warning"] }
+        { DefaultProfile, ["suggestion", "suggestion", "suggestion", "suggestion", "suggestion", "warning", "warning", "warning", "silent"] },
+        { StrictProfile, ["warning", "warning", "warning", "warning", "warning", "error", "error", "error", "suggestion"] },
+        { RegulatedProfile, ["warning", "warning", "error", "error", "warning", "error", "error", "error", "warning"] },
+        { AllEnabledProfile, ["warning", "warning", "warning", "warning", "warning", "warning", "warning", "warning", "warning"] }
     };
 
     [Theory]
