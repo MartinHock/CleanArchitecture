@@ -6,7 +6,7 @@ Without `AnalyzerProfile`, existing builds are unchanged.
 
 Precedence: `ruleOverrides` > `categoryOverrides` > selected profile category.
 Supported severities: `none`, `silent`, `suggestion`, `warning`, `error`.
-The six rule IDs are initial proof-of-concept examples, not a production coverage matrix.
+The nine rule IDs are reviewed proof-of-concept candidates, not a production coverage matrix.
 
 Validate with `dotnet run --project analyzer-profiles/Generator -- verify analyzer-profiles/matrix.json`.
 The generator is C# and has no PowerShell dependency.
@@ -28,7 +28,7 @@ The verifier clean-rebuilds the fixture for all four profiles, checks actual Ros
 | AllEnabled | warning | warning | warning | warning | 0 |
 
 The verifier also checks CA1502 against actual Roslyn diagnostics (`Strict=warning`, `Regulated=error`) and confirms that a fixture-local `.editorconfig` override can suppress CA1822 while the generated Strict profile still reports CA2000 as an error. The temporary `.editorconfig` is removed after verification.
-The six rule IDs are PoC examples, not production coverage. The generated globalconfig is passed to Roslyn through `EditorConfigFiles`.
+The nine rule IDs are PoC examples, not production coverage. The generated globalconfig is passed to Roslyn through `EditorConfigFiles`.
 
 ## Incremental build integration
 
@@ -36,6 +36,6 @@ The MSBuild target uses matrix.json and the generator source/project as inputs a
 
 ## Slice B candidate fixture (isolated)
 
-CandidateFixture tests CA1050 (type outside namespace), CA2208 (incorrect argument name), and CA1508 (redundant condition). Its local .editorconfig explicitly sets these diagnostics to warning. This does not change the production matrix.
+CandidateFixture tests CA1050 (type outside namespace), CA2208 (incorrect argument name), and CA1508 (redundant condition). Its local .editorconfig explicitly sets these diagnostics to warning. The three rules are now also included in the opt-in matrix; default builds remain unchanged.
 
 After restoring the fixture, run dotnet run --project analyzer-profiles/DiagnosticVerifier/DiagnosticVerifier.csproj to check the actual Roslyn diagnostics. The verifier asserts only the three expected rules and the build exit code.
