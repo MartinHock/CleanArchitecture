@@ -33,3 +33,9 @@ The six rule IDs are PoC examples, not production coverage. The generated global
 ## Incremental build integration
 
 The MSBuild target uses matrix.json and the generator source/project as inputs and a profile-specific .globalconfig as output. Repeated builds with unchanged inputs skip the generator. Profile-specific output paths keep Strict and Regulated configurations independent. Changes to matrix or generator inputs invalidate the corresponding output. The generator itself also preserves unchanged file content.
+
+## Slice B candidate fixture (isolated)
+
+CandidateFixture tests CA1050 (type outside namespace), CA2208 (incorrect argument name), and CA1508 (redundant condition). Its local .editorconfig explicitly sets these diagnostics to warning. This does not change the production matrix.
+
+After restoring the fixture, run dotnet run --project analyzer-profiles/DiagnosticVerifier/DiagnosticVerifier.csproj to check the actual Roslyn diagnostics. The verifier asserts only the three expected rules and the build exit code.

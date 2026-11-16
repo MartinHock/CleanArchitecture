@@ -68,6 +68,33 @@ finally
 {
     File.Delete(editorConfigPath);
 }
+// Slice B: isolated candidate diagnostics; production matrix remains unchanged.
+var candidateFixture = Path.Combine(root, "analyzer-profiles", "CandidateFixture", "CandidateFixture.csproj");
+var candidateStart = new ProcessStartInfo("dotnet")
+{
+    RedirectStandardOutput = true,
+    RedirectStandardError = true,
+    UseShellExecute = false,
+    WorkingDirectory = root
+};
+foreach (var arg in new[] { "build", candidateFixture, "-t:Rebuild", "-p:TreatWarningsAsErrors=false", "-v:minimal" })
+    candidateStart.ArgumentList.Add(arg);
+using (var candidateProcess = Process.Start(candidateStart) ?? throw new InvalidOperationException("Could not start candidate build"))
+{
+    var candidateStdout = candidateProcess.StandardOutput.ReadToEndAsync();
+    var candidateStderr = candidateProcess.StandardError.ReadToEndAsync();
+    await candidateProcess.WaitForExitAsync();
+    var candidateOutput = await candidateStdout + await candidateStderr;
+    var expected = new[] { "CA1050", "CA2208", "CA1508" };
+    var valid = candidateProcess.ExitCode == 0 && expected.All(rule => Matches(candidateOutput, rule, "warning"));
+    if (!valid)
+    {
+        Console.Error.WriteLine($"FAIL candidate diagnostics: expected warnings for {string.Join(", ", expected)}, exit=0; actual exit={candidateProcess.ExitCode}.\n{candidateOutput}");
+        failures++;
+    }
+    else
+        Console.WriteLine("PASS candidate diagnostics: CA1050, CA2208, CA1508 are warnings, exit=0");
+}
 return failures == 0 ? 0 : 1;
 
 static bool Matches(string output, string rule, string severity)
