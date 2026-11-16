@@ -95,6 +95,44 @@ using (var candidateProcess = Process.Start(candidateStart) ?? throw new Invalid
     else
         Console.WriteLine("PASS candidate diagnostics: CA1050, CA2208, CA1508 are warnings, exit=0");
 }
+// Validate actual Roslyn diagnostics from generated opt-in profiles, without the
+// isolated CandidateFixture's local .editorconfig forcing all rules to warning.
+var profileCandidateFixture = Path.Combine(root, "analyzer-profiles", "ProfileCandidateFixture", "ProfileCandidateFixture.csproj");
+var candidateProfiles = new[]
+{
+    (Profile: "Default", Ca1050: "none", Ca1508: "none", Ca2208: "warning", ExitCode: 0),
+    (Profile: "Strict", Ca1050: "warning", Ca1508: "warning", Ca2208: "error", ExitCode: 1),
+    (Profile: "Regulated", Ca1050: "warning", Ca1508: "error", Ca2208: "error", ExitCode: 1),
+    (Profile: "AllEnabled", Ca1050: "warning", Ca1508: "warning", Ca2208: "warning", ExitCode: 0)
+};
+foreach (var test in candidateProfiles)
+{
+    var start = new ProcessStartInfo("dotnet")
+    {
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        UseShellExecute = false,
+        WorkingDirectory = root
+    };
+    foreach (var arg in new[] { "build", profileCandidateFixture, "-t:Rebuild", $"-p:AnalyzerProfile={test.Profile}", "-p:TreatWarningsAsErrors=false", "-v:minimal" })
+        start.ArgumentList.Add(arg);
+    using var process = Process.Start(start) ?? throw new InvalidOperationException("Could not start profile candidate build");
+    var stdout = process.StandardOutput.ReadToEndAsync();
+    var stderr = process.StandardError.ReadToEndAsync();
+    await process.WaitForExitAsync();
+    var output = await stdout + await stderr;
+    var valid = process.ExitCode == test.ExitCode
+        && Matches(output, "CA1050", test.Ca1050)
+        && Matches(output, "CA1508", test.Ca1508)
+        && Matches(output, "CA2208", test.Ca2208);
+    if (!valid)
+    {
+        Console.Error.WriteLine($"FAIL profile candidate {test.Profile}: expected CA1050={test.Ca1050}, CA1508={test.Ca1508}, CA2208={test.Ca2208}, exit={test.ExitCode}; actual exit={process.ExitCode}.\n{output}");
+        failures++;
+    }
+    else
+        Console.WriteLine($"PASS profile candidate {test.Profile}: CA1050={test.Ca1050}, CA1508={test.Ca1508}, CA2208={test.Ca2208}");
+}
 return failures == 0 ? 0 : 1;
 
 static bool Matches(string output, string rule, string severity)

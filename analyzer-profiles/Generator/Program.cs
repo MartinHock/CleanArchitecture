@@ -15,7 +15,7 @@ try
     if (args[0] == "verify")
     {
         foreach (var profile in new[] { "Default", "Strict", "Regulated", "AllEnabled" })
-            Require(Resolve(root, profile).Count == 6, $"Missing rules for {profile}");
+            Require(Resolve(root, profile).Count == 9, $"Missing rules for {profile}");
         var modified = JsonNode.Parse(File.ReadAllText(matrixPath))!;
         modified["categoryOverrides"]!["Design"] = "error";
         modified["ruleOverrides"]!["CA1062"] = "none";
