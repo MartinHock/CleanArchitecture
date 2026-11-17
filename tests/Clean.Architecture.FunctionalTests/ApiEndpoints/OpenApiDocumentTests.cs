@@ -10,6 +10,16 @@ public sealed class OpenApiDocumentTests(CustomWebApplicationFactory<Program> fa
   private readonly HttpClient _client = factory.CreateClient();
 
   [Fact]
+  public async Task ServesScalarApiReference()
+  {
+    using var response = await _client.GetAsync("/scalar/v1", TestContext.Current.CancellationToken);
+    response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+    var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+    html.Contains("scalar", StringComparison.OrdinalIgnoreCase).ShouldBeTrue();
+  }
+
+  [Fact]
   public async Task ServesValidOpenApiDocument()
   {
     using var response = await _client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
