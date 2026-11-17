@@ -84,7 +84,7 @@ jobs:
               }
               if (!confirmed) continue;
               core.notice(`Retrying macOS allocation failure in run ${run.id}, attempt ${run.run_attempt}`);
-              await github.rest.actions.reRunFailedJobsForWorkflowRun({
+              await github.rest.actions.reRunWorkflowFailedJobs({
                 owner, repo, run_id: run.id,
               });
             }
