@@ -39,3 +39,15 @@ The MSBuild target uses matrix.json and the generator source/project as inputs a
 CandidateFixture tests CA1050 (type outside namespace), CA2208 (incorrect argument name), and CA1508 (redundant condition). Its local .editorconfig explicitly sets these diagnostics to warning. The three rules are now also included in the opt-in matrix; default builds remain unchanged.
 
 After restoring the fixture, run dotnet run --project analyzer-profiles/DiagnosticVerifier/DiagnosticVerifier.csproj to check the actual Roslyn diagnostics. The verifier asserts only the three expected rules and the build exit code.
+
+## Analyzer exception and suppression review (#254)
+
+The profile matrix is opt-in. Its nine mapped IDs are PoC coverage, not a repository-wide policy. Do not enable a profile by default or alter required CI gates as part of exception handling.
+
+1. Prefer fixing the diagnostic. Record the analyzer ID, affected project/file, selected profile, reason, and whether the finding is a false positive before proposing an exception.
+2. Use the narrowest practical scope: a justified inline suppression or a file-scoped `.editorconfig` override. Avoid blanket `NoWarn`, category-wide overrides, or repository-wide disabling without separate architectural review.
+3. In a PR, show the before/after diagnostic and document why a fix is inappropriate, the scope, owner, and when the exception should be revisited (for example, after an SDK or analyzer update).
+4. Review changes to `matrix.json`, `.editorconfig`, or suppression attributes independently. The opt-in generator's `.globalconfig` does not automatically win over file-local `.editorconfig` settings.
+5. Run the generator tests and actual diagnostic verifier on Windows and Ubuntu. Confirm the default build is unchanged; treat profile-specific warnings and errors as advisory until rollout is separately approved.
+
+The functional test `RepositoryEditorConfigTests` detects direct per-rule severity collisions for the nine mapped IDs in the root, MinimalClean, and sample `.editorconfig` files. It intentionally does not claim to validate every Roslyn/MSBuild precedence case or analyzer availability.
