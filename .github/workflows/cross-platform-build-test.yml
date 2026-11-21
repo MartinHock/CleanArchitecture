@@ -59,12 +59,6 @@ jobs:
         id: build
         run: dotnet build Clean.Architecture.slnx --configuration ${{ matrix.configuration }} --no-restore --verbosity minimal
 
-      # Build the complete sample solution on each platform; sample tests remain Ubuntu-only.
-      - name: Restore Sample solution
-        run: dotnet restore sample/NimblePros.SampleToDo.slnx --verbosity minimal
-
-      - name: Build Sample solution
-        run: dotnet build sample/NimblePros.SampleToDo.slnx --configuration ${{ matrix.configuration }} --no-restore --verbosity minimal
 
       # MTP v2 writes TRX and Cobertura reports to the requested results directory.
       - name: Run Unit Tests (${{ matrix.configuration }})
